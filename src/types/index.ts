@@ -151,3 +151,56 @@ export interface Conversation {
     lastMessage: Message;
     updatedAt: Date;
 }
+
+// Mentorship types
+export interface MentorProfile {
+    id: string;
+    userId: string;
+    skills: string[];
+    expertise: string[];
+    bio?: string;
+    experience?: string;
+    availability?: string;
+    isActive: boolean;
+    hourlyRate?: number;
+    createdAt: Date;
+    updatedAt: Date;
+    user: User;
+}
+
+export interface MentorshipPair {
+    id: string;
+    mentorId: string;
+    menteeId: string;
+    status: "PENDING" | "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";
+    message?: string;
+    createdAt: Date;
+    acceptedAt?: Date;
+    endedAt?: Date;
+    mentor: User;
+    mentee: User;
+    sessions: Session[];
+}
+
+export interface Session {
+    id: string;
+    pairId: string;
+    title: string;
+    description?: string;
+    scheduledAt: Date;
+    duration: number;
+    meetingLink?: string;
+    status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+    createdAt: Date;
+    completedAt?: Date;
+}
+
+export interface Feedback {
+    id: string;
+    sessionId: string;
+    authorId: string;
+    rating: number;
+    comments?: string;
+    isPublic: boolean;
+    createdAt: Date;
+}

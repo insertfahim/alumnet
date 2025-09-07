@@ -66,6 +66,12 @@ export function Navigation() {
                                         Events
                                     </Link>
                                     <Link
+                                        href="/mentorship"
+                                        className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
+                                    >
+                                        Mentorship
+                                    </Link>
+                                    <Link
                                         href="/messages"
                                         className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
                                     >
@@ -161,6 +167,12 @@ export function Navigation() {
                                     className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                                 >
                                     Events
+                                </Link>
+                                <Link
+                                    href="/mentorship"
+                                    className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                >
+                                    Mentorship
                                 </Link>
                                 <Link
                                     href="/messages"
