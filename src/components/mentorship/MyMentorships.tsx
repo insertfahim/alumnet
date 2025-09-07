@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    useTabs,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
 import {
     Users,
     MessageCircle,
@@ -48,7 +54,8 @@ interface Session {
     meetingLink?: string;
 }
 
-export function MyMentorships() {
+export default function MyMentorships() {
+    const { onValueChange } = useTabs();
     const [mentorships, setMentorships] = useState<MentorshipPair[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -327,8 +334,8 @@ export function MyMentorships() {
                                 Browse available mentors and send your first
                                 mentorship request.
                             </p>
-                            <Button>
-                                <a href="#browse">Browse Mentors</a>
+                            <Button onClick={() => onValueChange("browse")}>
+                                Browse Mentors
                             </Button>
                         </CardContent>
                     </Card>
@@ -486,3 +493,5 @@ export function MyMentorships() {
         </Tabs>
     );
 }
+
+export { MyMentorships };

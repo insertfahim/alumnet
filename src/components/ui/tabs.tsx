@@ -8,6 +8,14 @@ const TabsContext = createContext<{
     onValueChange: (value: string) => void;
 } | null>(null);
 
+export function useTabs() {
+    const context = useContext(TabsContext);
+    if (!context) {
+        throw new Error("useTabs must be used within a TabsProvider");
+    }
+    return context;
+}
+
 interface TabsProps {
     defaultValue: string;
     children: React.ReactNode;
@@ -32,6 +40,7 @@ interface TabsListProps {
 export function TabsList({ children, className }: TabsListProps) {
     return (
         <div
+            role="tablist"
             className={clsx(
                 "inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500",
                 className
@@ -49,8 +58,7 @@ interface TabsTriggerProps {
 }
 
 export function TabsTrigger({ value, children, className }: TabsTriggerProps) {
-    const context = useContext(TabsContext);
-    if (!context) throw new Error("TabsTrigger must be used within Tabs");
+    const context = useTabs();
 
     const isActive = context.value === value;
 
@@ -63,6 +71,9 @@ export function TabsTrigger({ value, children, className }: TabsTriggerProps) {
                     : "text-gray-500 hover:text-gray-700",
                 className
             )}
+            role="tab"
+            value={value}
+            aria-selected={isActive}
             onClick={() => context.onValueChange(value)}
         >
             {children}
@@ -77,8 +88,7 @@ interface TabsContentProps {
 }
 
 export function TabsContent({ value, children, className }: TabsContentProps) {
-    const context = useContext(TabsContext);
-    if (!context) throw new Error("TabsContent must be used within Tabs");
+    const context = useTabs();
 
     if (context.value !== value) return null;
 

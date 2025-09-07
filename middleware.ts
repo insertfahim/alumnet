@@ -19,6 +19,11 @@ const adminOnlyRoutes = ["/admin"];
 const authRoutes = ["/login", "/register"];
 
 export async function middleware(request: NextRequest) {
+    // Skip middleware during build time
+    if (process.env.NODE_ENV === "production" && !process.env.NEXT_RUNTIME) {
+        return NextResponse.next();
+    }
+
     const { pathname } = request.nextUrl;
     const token =
         request.cookies.get("token")?.value ||

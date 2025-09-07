@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import VerificationUpload from "@/components/verification/VerificationUpload";
 import VerifiedBadge from "@/components/verification/VerifiedBadge";
+import ProfilePictureUpload from "@/components/profile/ProfilePictureUpload";
 import {
     User,
     Edit,
@@ -14,11 +15,18 @@ import {
     Globe,
     Linkedin,
     Github,
+    Trash2,
 } from "lucide-react";
 
 export default function ProfilePage() {
-    const { user, loading } = useAuth();
+    const { user, loading, refreshUser } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+    const [saveMessage, setSaveMessage] = useState<{
+        type: "success" | "error";
+        text: string;
+    } | null>(null);
     const [currentVerification, setCurrentVerification] = useState<any>(null);
     const [profileData, setProfileData] = useState({
         bio: "",
@@ -70,8 +78,164 @@ export default function ProfilePage() {
     };
 
     const handleSave = async () => {
-        // TODO: Implement profile update API call
-        setIsEditing(false);
+        setIsSaving(true);
+        setSaveMessage(null);
+
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                setSaveMessage({
+                    type: "error",
+                    text: "Authentication token not found. Please log in again.",
+                });
+                setIsSaving(false);
+                return;
+            }
+
+            const response = await fetch("/api/profile", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(profileData),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Refresh the user data in the context
+                await refreshUser();
+                setIsEditing(false);
+                setSaveMessage({
+                    type: "success",
+                    text: "Profile updated successfully!",
+                });
+
+                // Clear success message after 3 seconds
+                setTimeout(() => {
+                    setSaveMessage(null);
+                }, 3000);
+            } else {
+                const errorData = await response.json();
+                setSaveMessage({
+                    type: "error",
+                    text: errorData.message || "Failed to update profile",
+                });
+            }
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            setSaveMessage({
+                type: "error",
+                text: "An error occurred while updating your profile. Please try again.",
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleProfilePictureUpload = async (file: File) => {
+        setIsUploadingPicture(true);
+        setSaveMessage(null);
+
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                throw new Error("No authentication token found");
+            }
+
+            const formData = new FormData();
+            formData.append("profilePicture", file);
+
+            const response = await fetch("/api/profile/picture", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Refresh the user data in the context
+                await refreshUser();
+                setSaveMessage({
+                    type: "success",
+                    text: "Profile picture updated successfully!",
+                });
+
+                // Clear success message after 3 seconds
+                setTimeout(() => {
+                    setSaveMessage(null);
+                }, 3000);
+            } else {
+                const errorData = await response.json();
+                setSaveMessage({
+                    type: "error",
+                    text:
+                        errorData.message || "Failed to upload profile picture",
+                });
+            }
+        } catch (error) {
+            console.error("Error uploading profile picture:", error);
+            setSaveMessage({
+                type: "error",
+                text: "An error occurred while uploading your profile picture. Please try again.",
+            });
+        } finally {
+            setIsUploadingPicture(false);
+        }
+    };
+
+    const handleProfilePictureRemove = async () => {
+        if (!confirm("Are you sure you want to remove your profile picture?")) {
+            return;
+        }
+
+        setIsUploadingPicture(true);
+        setSaveMessage(null);
+
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                throw new Error("No authentication token found");
+            }
+
+            const response = await fetch("/api/profile/picture", {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                // Refresh the user data in the context
+                await refreshUser();
+                setSaveMessage({
+                    type: "success",
+                    text: "Profile picture removed successfully!",
+                });
+
+                // Clear success message after 3 seconds
+                setTimeout(() => {
+                    setSaveMessage(null);
+                }, 3000);
+            } else {
+                const errorData = await response.json();
+                setSaveMessage({
+                    type: "error",
+                    text:
+                        errorData.message || "Failed to remove profile picture",
+                });
+            }
+        } catch (error) {
+            console.error("Error removing profile picture:", error);
+            setSaveMessage({
+                type: "error",
+                text: "An error occurred while removing your profile picture. Please try again.",
+            });
+        } finally {
+            setIsUploadingPicture(false);
+        }
     };
 
     if (loading) {
@@ -106,15 +270,21 @@ export default function ProfilePage() {
                 <div className="bg-gradient-to-r from-primary-600 to-primary-800 px-6 py-8">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center">
-                                {user.profilePicture ? (
-                                    <img
-                                        src={user.profilePicture}
-                                        alt={`${user.firstName} ${user.lastName}`}
-                                        className="w-24 h-24 rounded-full object-cover"
-                                    />
-                                ) : (
-                                    <User className="w-12 h-12 text-primary-600" />
+                            <div className="relative">
+                                <ProfilePictureUpload
+                                    currentPicture={user.profilePicture}
+                                    onUpload={handleProfilePictureUpload}
+                                    isUploading={isUploadingPicture}
+                                />
+                                {user.profilePicture && (
+                                    <button
+                                        onClick={handleProfilePictureRemove}
+                                        disabled={isUploadingPicture}
+                                        className="absolute -bottom-2 -left-2 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-full p-2 shadow-lg transition-colors duration-200"
+                                        title="Remove profile picture"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
                                 )}
                             </div>
                             <div className="ml-6">
@@ -143,7 +313,10 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         <button
-                            onClick={() => setIsEditing(!isEditing)}
+                            onClick={() => {
+                                setIsEditing(!isEditing);
+                                setSaveMessage(null);
+                            }}
                             className="bg-white text-primary-600 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
                         >
                             <Edit className="w-4 h-4 mr-2" />
@@ -421,12 +594,29 @@ export default function ProfilePage() {
                                 </div>
 
                                 {isEditing && (
-                                    <button
-                                        onClick={handleSave}
-                                        className="w-full mt-4 bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors"
-                                    >
-                                        Save Changes
-                                    </button>
+                                    <>
+                                        {saveMessage && (
+                                            <div
+                                                className={`mb-4 p-3 rounded-lg ${
+                                                    saveMessage.type ===
+                                                    "success"
+                                                        ? "bg-green-100 text-green-700"
+                                                        : "bg-red-100 text-red-700"
+                                                }`}
+                                            >
+                                                {saveMessage.text}
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={handleSave}
+                                            disabled={isSaving}
+                                            className="w-full bg-primary-600 text-white py-2 px-4 rounded-lg hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                        >
+                                            {isSaving
+                                                ? "Saving..."
+                                                : "Save Changes"}
+                                        </button>
+                                    </>
                                 )}
                             </div>
 
