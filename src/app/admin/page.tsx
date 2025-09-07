@@ -26,7 +26,7 @@ interface UnverifiedUser {
 }
 
 export default function AdminDashboard() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("verifications");
     const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>(
@@ -41,6 +41,8 @@ export default function AdminDashboard() {
     });
 
     useEffect(() => {
+        if (authLoading) return; // Wait for auth check to complete
+
         if (!user) {
             router.push("/login");
             return;
@@ -52,7 +54,7 @@ export default function AdminDashboard() {
         }
 
         fetchData();
-    }, [user, router]);
+    }, [user, authLoading, router]);
 
     const fetchData = async () => {
         try {
@@ -105,10 +107,15 @@ export default function AdminDashboard() {
         }
     };
 
-    if (loading) {
+    if (authLoading || loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">
+                        Loading admin dashboard...
+                    </p>
+                </div>
             </div>
         );
     }

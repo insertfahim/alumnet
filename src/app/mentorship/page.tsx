@@ -41,7 +41,7 @@ interface MentorProfile {
 }
 
 export default function MentorshipPage() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [mentors, setMentors] = useState<MentorProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -80,6 +80,19 @@ export default function MentorshipPage() {
             setLoading(false);
         }
     };
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">
+                        Loading mentorship program...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     if (!user) {
         return (

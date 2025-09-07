@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 export default function ProfilePage() {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [currentVerification, setCurrentVerification] = useState<any>(null);
     const [profileData, setProfileData] = useState({
@@ -73,6 +73,19 @@ export default function ProfilePage() {
         // TODO: Implement profile update API call
         setIsEditing(false);
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">
+                        Loading your profile...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     if (!user) {
         return (

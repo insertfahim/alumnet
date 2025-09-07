@@ -33,7 +33,7 @@ interface RecentActivity {
 }
 
 export default function Dashboard() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [stats, setStats] = useState<DashboardStats>({
         totalConnections: 0,
@@ -47,13 +47,15 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (authLoading) return; // Wait for auth check to complete
+
         if (!user) {
             router.push("/login");
             return;
         }
 
         fetchDashboardData();
-    }, [user, router]);
+    }, [user, authLoading, router]);
 
     const fetchDashboardData = async () => {
         try {
@@ -92,10 +94,15 @@ export default function Dashboard() {
         }
     };
 
-    if (loading) {
+    if (authLoading || loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">
+                        Loading your dashboard...
+                    </p>
+                </div>
             </div>
         );
     }

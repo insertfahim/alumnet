@@ -7,7 +7,7 @@ import { User, Menu, X, LogOut, Settings, Users } from "lucide-react";
 
 export function Navigation() {
     const [isOpen, setIsOpen] = useState(false);
-    const { user, logout } = useAuth();
+    const { user, loading, logout } = useAuth();
 
     return (
         <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -83,7 +83,11 @@ export function Navigation() {
                     </div>
 
                     <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                        {user ? (
+                        {loading ? (
+                            <div className="flex items-center space-x-4">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                            </div>
+                        ) : user ? (
                             <div className="ml-3 relative">
                                 <div className="flex items-center space-x-4">
                                     {user.role === "ADMIN" && (
@@ -142,7 +146,11 @@ export function Navigation() {
             {isOpen && (
                 <div className="sm:hidden">
                     <div className="pt-2 pb-3 space-y-1">
-                        {user ? (
+                        {loading ? (
+                            <div className="px-3 py-2">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
+                            </div>
+                        ) : user ? (
                             <>
                                 <Link
                                     href="/dashboard"
