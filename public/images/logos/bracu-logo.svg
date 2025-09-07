@@ -1,0 +1,25 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#1E3A8A" stroke-width="2"/>
+  
+  <!-- BRAC Text -->
+  <text x="60" y="35" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#1E3A8A">BRAC</text>
+  
+  <!-- University building icon -->
+  <rect x="30" y="45" width="60" height="25" fill="none" stroke="#1E3A8A" stroke-width="1.5" rx="2"/>
+  <rect x="35" y="50" width="6" height="15" fill="#1E3A8A"/>
+  <rect x="44" y="50" width="6" height="15" fill="#1E3A8A"/>
+  <rect x="53" y="50" width="6" height="15" fill="#1E3A8A"/>
+  <rect x="62" y="50" width="6" height="15" fill="#1E3A8A"/>
+  <rect x="71" y="50" width="6" height="15" fill="#1E3A8A"/>
+  <rect x="80" y="50" width="6" height="15" fill="#1E3A8A"/>
+  
+  <!-- Building roof -->
+  <path d="M25 45 L60 35 L95 45 Z" fill="#1E3A8A"/>
+  
+  <!-- University Text -->
+  <text x="60" y="85" font-family="Arial, sans-serif" font-size="12" font-weight="normal" text-anchor="middle" fill="#1E3A8A">UNIVERSITY</text>
+  
+  <!-- Established year -->
+  <text x="60" y="105" font-family="Arial, sans-serif" font-size="8" text-anchor="middle" fill="#64748B">EST. 2001</text>
+</svg>

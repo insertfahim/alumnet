@@ -1,0 +1,615 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String
+  firstName       String
+  lastName        String
+  profilePicture  String?
+  bio             String?
+  graduationYear  Int
+  degree          String
+  major           String
+  currentCompany  String?
+  currentPosition String?
+  location        String?
+  linkedinUrl     String?
+  githubUrl       String?
+  website         String?
+  role            Role     @default(ALUMNI)
+  isVerified      Boolean  @default(false)
+  emailVerified   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  education           Education[]
+  experience          Experience[]
+  connectionsFrom     Connection[] @relation("ConnectionFrom")
+  connectionsTo       Connection[] @relation("ConnectionTo")
+  posts               Post[]
+  comments            Comment[]
+  jobs                Job[]
+  jobApplications     JobApplication[]
+  organizedEvents     Event[]
+  eventAttendances    EventAttendance[]
+  sentMessages        Message[] @relation("MessageFrom")
+  receivedMessages    Message[] @relation("MessageTo")
+  
+  // New relations
+  verification        Verification?
+  verifiedProfiles    Verification[] @relation("VerifiedBy")
+  forumThreads        ForumThread[]
+  forumPosts          ForumPost[]
+  votes               Vote[]
+  mentorProfile       MentorProfile?
+  mentorshipAsMentor  MentorshipPair[] @relation("Mentor")
+  mentorshipAsMentee  MentorshipPair[] @relation("Mentee")
+  sessionFeedback     Feedback[]
+  newsletterPref      NewsletterPref?
+  donations           Donation[]
+  messageThreads      MessageThread[] @relation("ThreadParticipants")
+
+  @@map("users")
+}
+
+model Education {
+  id          String @id @default(cuid())
+  userId      String
+  institution String
+  degree      String
+  major       String
+  startYear   Int
+  endYear     Int
+  gpa         Float?
+  honors      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("education")
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  userId      String
+  company     String
+  position    String
+  startDate   DateTime
+  endDate     DateTime?
+  current     Boolean   @default(false)
+  description String?
+  location    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("experience")
+}
+
+model Connection {
+  id         String            @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  status     ConnectionStatus  @default(PENDING)
+  message    String?
+  createdAt  DateTime          @default(now())
+
+  fromUser User @relation("ConnectionFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("ConnectionTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@map("connections")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  authorId  String
+  content   String
+  images    String[]
+  type      PostType @default(GENERAL)
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  title        String
+  company      String
+  location     String
+  type         JobType
+  remote       Boolean  @default(false)
+  description  String
+  requirements String[]
+  salary       String?
+  postedById   String
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+
+  postedBy     User             @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  applications JobApplication[]
+
+  @@map("jobs")
+}
+
+model JobApplication {
+  id          String              @id @default(cuid())
+  jobId       String
+  applicantId String
+  coverLetter String?
+  resumeUrl   String?
+  status      ApplicationStatus   @default(PENDING)
+  createdAt   DateTime            @default(now())
+
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicant User @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, applicantId])
+  @@map("job_applications")
+}
+
+model Event {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  location     String
+  virtual      Boolean  @default(false)
+  startDate    DateTime
+  endDate      DateTime
+  maxAttendees Int?
+  price        Float?
+  organizerId  String
+  createdAt    DateTime @default(now())
+
+  organizer User              @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  attendees EventAttendance[]
+
+  @@map("events")
+}
+
+model EventAttendance {
+  id           String          @id @default(cuid())
+  eventId      String
+  userId       String
+  status       AttendanceStatus @default(GOING)
+  registeredAt DateTime        @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("event_attendances")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  fromUserId String
+  toUserId   String
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  fromUser User @relation("MessageFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("MessageTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// New models for complete functionality
+
+// Verification system
+model Verification {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  documentKey  String   // S3 object key for proof PDF
+  verifiedById String?  // admin who verified
+  verifiedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verifiedBy User? @relation("VerifiedBy", fields: [verifiedById], references: [id])
+
+  @@map("verifications")
+}
+
+// Enhanced messaging system
+model MessageThread {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants User[]     @relation("ThreadParticipants")
+  messages     ThreadMessage[]
+
+  @@map("message_threads")
+}
+
+model ThreadMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  senderId  String
+  content   String
+  readBy    String[] // Array of user IDs who have read this message
+  createdAt DateTime @default(now())
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@map("thread_messages")
+}
+
+// Forum system
+model ForumCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  color       String   @default("#6366f1")
+  icon        String?
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  threads ForumThread[]
+
+  @@map("forum_categories")
+}
+
+model ForumThread {
+  id          String   @id @default(cuid())
+  categoryId  String
+  authorId    String
+  title       String
+  slug        String   @unique
+  content     String
+  isPinned    Boolean  @default(false)
+  isLocked    Boolean  @default(false)
+  viewCount   Int      @default(0)
+  bestPostId  String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  posts    ForumPost[]
+  votes    Vote[]
+  bestPost ForumPost?    @relation("BestPost", fields: [bestPostId], references: [id])
+
+  @@map("forum_threads")
+}
+
+model ForumPost {
+  id        String   @id @default(cuid())
+  threadId  String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  thread         ForumThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author         User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  votes          Vote[]
+  bestAnswerFor  ForumThread? @relation("BestPost")
+
+  @@map("forum_posts")
+}
+
+model Vote {
+  id       String    @id @default(cuid())
+  userId   String
+  value    Int       // 1 for upvote, -1 for downvote
+  postId   String?
+  threadId String?
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post   ForumPost?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  thread ForumThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@unique([userId, threadId])
+  @@map("votes")
+}
+
+// Mentorship system
+model MentorProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  skills        String[]
+  expertise     String[]
+  bio           String?
+  experience    String?
+  availability  String?
+  isActive      Boolean  @default(true)
+  hourlyRate    Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availabilitySlots AvailabilitySlot[]
+  mentorships       MentorshipPair[]   @relation("MentorProfile")
+
+  @@map("mentor_profiles")
+}
+
+model AvailabilitySlot {
+  id        String   @id @default(cuid())
+  mentorId  String
+  dayOfWeek Int      // 0 = Sunday, 1 = Monday, etc.
+  startTime String   // "09:00"
+  endTime   String   // "17:00"
+  timezone  String   @default("UTC")
+  isActive  Boolean  @default(true)
+
+  mentor MentorProfile @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@map("availability_slots")
+}
+
+model MentorshipPair {
+  id         String   @id @default(cuid())
+  mentorId   String
+  menteeId   String
+  status     MentorshipStatus @default(PENDING)
+  message    String?
+  createdAt  DateTime @default(now())
+  acceptedAt DateTime?
+  endedAt    DateTime?
+
+  mentorProfile MentorProfile @relation("MentorProfile", fields: [mentorId], references: [id], onDelete: Cascade, map: "mentorship_pairs_mentor_profile_fkey")
+  mentor        User          @relation("Mentor", fields: [mentorId], references: [id], onDelete: Cascade, map: "mentorship_pairs_mentor_user_fkey")
+  mentee        User          @relation("Mentee", fields: [menteeId], references: [id], onDelete: Cascade)
+  sessions      Session[]
+
+  @@unique([mentorId, menteeId])
+  @@map("mentorship_pairs")
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  pairId       String
+  title        String
+  description  String?
+  scheduledAt  DateTime
+  duration     Int       @default(60) // minutes
+  meetingLink  String?
+  status       SessionStatus @default(SCHEDULED)
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  pair     MentorshipPair @relation(fields: [pairId], references: [id], onDelete: Cascade)
+  feedback Feedback?
+
+  @@map("sessions")
+}
+
+model Feedback {
+  id        String @id @default(cuid())
+  sessionId String @unique
+  authorId  String
+  rating    Int    // 1-5 stars
+  comments  String?
+  isPublic  Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+// Newsletter system
+model NewsletterPref {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  subscribed        Boolean @default(true)
+  categories        String[] // ["general", "jobs", "events", "mentorship"]
+  frequency         NewsletterFrequency @default(WEEKLY)
+  unsubscribeToken  String  @unique @default(cuid())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("newsletter_preferences")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  title       String
+  subject     String
+  bodyHtml    String
+  bodyText    String?
+  category    String   @default("general")
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  status      CampaignStatus @default(DRAFT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sends Send[]
+
+  @@map("campaigns")
+}
+
+model Send {
+  id         String   @id @default(cuid())
+  campaignId String
+  userId     String
+  sentAt     DateTime @default(now())
+  status     SendStatus @default(SENT)
+
+  campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  openEvents  OpenEvent[]
+
+  @@unique([campaignId, userId])
+  @@map("sends")
+}
+
+model OpenEvent {
+  id        String   @id @default(cuid())
+  sendId    String
+  openedAt  DateTime @default(now())
+  ip        String?
+  userAgent String?
+
+  send Send @relation(fields: [sendId], references: [id], onDelete: Cascade)
+
+  @@map("open_events")
+}
+
+// Donations system
+model Donation {
+  id                    String   @id @default(cuid())
+  userId                String?
+  email                 String?  // For guest donations
+  firstName             String?
+  lastName              String?
+  amountCents           Int
+  currency              String   @default("USD")
+  recurring             Boolean  @default(false)
+  stripePaymentIntentId String?  @unique
+  stripeSubscriptionId  String?  @unique
+  status                DonationStatus @default(PENDING)
+  message               String?
+  isAnonymous           Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  receipts Receipt[]
+
+  @@map("donations")
+}
+
+model Receipt {
+  id         String   @id @default(cuid())
+  donationId String
+  pdfKey     String   // S3 object key
+  receiptNum String   @unique
+  issuedAt   DateTime @default(now())
+
+  donation Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+
+  @@map("receipts")
+}
+
+// Password reset tokens
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+// Enums
+enum Role {
+  ADMIN
+  ALUMNI
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum PostType {
+  GENERAL
+  JOB
+  EVENT
+  ACHIEVEMENT
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  REJECTED
+  ACCEPTED
+}
+
+enum AttendanceStatus {
+  GOING
+  MAYBE
+  NOT_GOING
+}
+
+enum MentorshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+enum SessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum NewsletterFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  CANCELLED
+}
+
+enum SendStatus {
+  SENT
+  FAILED
+  BOUNCED
+}
+
+enum DonationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
