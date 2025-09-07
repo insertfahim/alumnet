@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@/components/providers/AuthProvider";
 import {
     ArrowRight,
     Users,
@@ -10,6 +11,8 @@ import {
 } from "lucide-react";
 
 export function Hero() {
+    const { user } = useAuth();
+
     return (
         <div className="bg-gradient-to-r from-primary-600 to-primary-800">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -46,13 +49,23 @@ export function Hero() {
                         globe.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link
-                            href="/register"
-                            className="inline-flex items-center px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                        >
-                            Join the BRACU Network
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </Link>
+                        {user ? (
+                            <Link
+                                href="/dashboard"
+                                className="inline-flex items-center px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Go to Dashboard
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        ) : (
+                            <Link
+                                href="/register"
+                                className="inline-flex items-center px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Join the BRACU Network
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        )}
                         <Link
                             href="/directory"
                             className="inline-flex items-center px-8 py-3 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-primary-600 transition-colors"
