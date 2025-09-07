@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import VerificationUpload from "@/components/verification/VerificationUpload";
+import VerifiedBadge from "@/components/verification/VerifiedBadge";
 import {
     User,
     Edit,
@@ -17,6 +19,7 @@ import {
 export default function ProfilePage() {
     const { user } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
+    const [currentVerification, setCurrentVerification] = useState<any>(null);
     const [profileData, setProfileData] = useState({
         bio: "",
         currentCompany: "",
@@ -38,8 +41,33 @@ export default function ProfilePage() {
                 githubUrl: user.githubUrl || "",
                 website: user.website || "",
             });
+
+            // Fetch current verification status
+            fetchVerificationStatus();
         }
     }, [user]);
+
+    const fetchVerificationStatus = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("/api/verification/upload", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCurrentVerification(data.verification);
+            }
+        } catch (error) {
+            console.error("Error fetching verification status:", error);
+        }
+    };
+
+    const handleVerificationComplete = (verification: any) => {
+        setCurrentVerification(verification);
+    };
 
     const handleSave = async () => {
         // TODO: Implement profile update API call
@@ -77,9 +105,15 @@ export default function ProfilePage() {
                                 )}
                             </div>
                             <div className="ml-6">
-                                <h1 className="text-3xl font-bold text-white">
-                                    {user.firstName} {user.lastName}
-                                </h1>
+                                <div className="flex items-center space-x-3">
+                                    <h1 className="text-3xl font-bold text-white">
+                                        {user.firstName} {user.lastName}
+                                    </h1>
+                                    <VerifiedBadge
+                                        isVerified={user.isVerified}
+                                        size="lg"
+                                    />
+                                </div>
                                 <p className="text-primary-100">
                                     {profileData.currentPosition &&
                                     profileData.currentCompany
@@ -197,7 +231,7 @@ export default function ProfilePage() {
                             </div>
 
                             {/* Education Section */}
-                            <div>
+                            <div className="mb-8">
                                 <h2 className="text-xl font-semibold text-gray-900 mb-4">
                                     Education
                                 </h2>
@@ -214,6 +248,16 @@ export default function ProfilePage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Verification Section */}
+                            <div>
+                                <VerificationUpload
+                                    currentVerification={currentVerification}
+                                    onUploadComplete={
+                                        handleVerificationComplete
+                                    }
+                                />
                             </div>
                         </div>
 

@@ -9,7 +9,11 @@ interface AuthContextType {
     loading: boolean;
     login: (email: string, password: string) => Promise<boolean>;
     logout: () => void;
-    register: (userData: RegisterData) => Promise<boolean>;
+    register: (
+        userData: RegisterData
+    ) => Promise<{ success: boolean; requiresVerification?: boolean }>;
+    resendVerification: (email: string) => Promise<boolean>;
+    refreshUser: () => Promise<void>;
 }
 
 interface RegisterData {
@@ -95,7 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
     };
 
-    const register = async (userData: RegisterData): Promise<boolean> => {
+    const register = async (
+        userData: RegisterData
+    ): Promise<{ success: boolean; requiresVerification?: boolean }> => {
         try {
             const response = await fetch("/api/auth/register", {
                 method: "POST",
@@ -106,22 +112,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
 
             if (response.ok) {
-                const { user, token } = await response.json();
+                const { user, token, requiresEmailVerification } =
+                    await response.json();
                 localStorage.setItem("token", token);
                 setToken(token);
                 setUser(user);
-                return true;
+                return {
+                    success: true,
+                    requiresVerification: requiresEmailVerification,
+                };
             }
-            return false;
+            return { success: false };
         } catch (error) {
             console.error("Registration failed:", error);
+            return { success: false };
+        }
+    };
+
+    const resendVerification = async (email: string): Promise<boolean> => {
+        try {
+            const response = await fetch("/api/auth/verify-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            return response.ok;
+        } catch (error) {
+            console.error("Resend verification failed:", error);
             return false;
+        }
+    };
+
+    const refreshUser = async (): Promise<void> => {
+        if (!token) return;
+
+        try {
+            const response = await fetch("/api/auth/me", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                setUser(userData);
+            }
+        } catch (error) {
+            console.error("Failed to refresh user:", error);
         }
     };
 
     return (
         <AuthContext.Provider
-            value={{ user, token, loading, login, logout, register }}
+            value={{
+                user,
+                token,
+                loading,
+                login,
+                logout,
+                register,
+                resendVerification,
+                refreshUser,
+            }}
         >
             {children}
         </AuthContext.Provider>

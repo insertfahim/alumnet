@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
+import VerificationManager from "@/components/admin/VerificationManager";
 import {
     Users,
     Shield,
@@ -31,6 +32,7 @@ interface UnverifiedUser {
 export default function AdminDashboard() {
     const { user } = useAuth();
     const router = useRouter();
+    const [activeTab, setActiveTab] = useState("verifications");
     const [unverifiedUsers, setUnverifiedUsers] = useState<UnverifiedUser[]>(
         []
     );
@@ -189,86 +191,149 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-lg shadow mb-8">
                 <div className="border-b border-gray-200">
                     <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                        <button className="border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                            User Verification
+                        <button
+                            onClick={() => setActiveTab("verifications")}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === "verifications"
+                                    ? "border-primary-500 text-primary-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
+                            Profile Verifications
                         </button>
-                        <button className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        <button
+                            onClick={() => setActiveTab("legacy")}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === "legacy"
+                                    ? "border-primary-500 text-primary-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
+                            Legacy Verifications
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("analytics")}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === "analytics"
+                                    ? "border-primary-500 text-primary-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
                             Analytics
                         </button>
-                        <button className="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        <button
+                            onClick={() => setActiveTab("newsletter")}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === "newsletter"
+                                    ? "border-primary-500 text-primary-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
                             Newsletter
                         </button>
                     </nav>
                 </div>
 
                 <div className="p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                        Pending User Verifications
-                    </h2>
+                    {activeTab === "verifications" && <VerificationManager />}
 
-                    {unverifiedUsers.length === 0 ? (
-                        <div className="text-center py-8">
-                            <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-500">
-                                No pending verifications
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {unverifiedUsers.map((user) => (
-                                <div
-                                    key={user.id}
-                                    className="border border-gray-200 rounded-lg p-4 flex items-center justify-between"
-                                >
-                                    <div className="flex-1">
-                                        <div className="flex items-center space-x-4">
-                                            <div>
-                                                <h3 className="font-medium text-gray-900">
-                                                    {user.firstName}{" "}
-                                                    {user.lastName}
-                                                </h3>
-                                                <p className="text-sm text-gray-500">
-                                                    {user.email}
-                                                </p>
-                                                <p className="text-sm text-gray-500">
-                                                    Class of{" "}
-                                                    {user.graduationYear} •{" "}
-                                                    {user.major}
-                                                </p>
+                    {activeTab === "legacy" && (
+                        <>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                                Legacy User Verifications
+                            </h2>
+
+                            {unverifiedUsers.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                    <p className="text-gray-500">
+                                        No pending verifications
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {unverifiedUsers.map((user) => (
+                                        <div
+                                            key={user.id}
+                                            className="border border-gray-200 rounded-lg p-4 flex items-center justify-between"
+                                        >
+                                            <div className="flex-1">
+                                                <div className="flex items-center space-x-4">
+                                                    <div>
+                                                        <h3 className="font-medium text-gray-900">
+                                                            {user.firstName}{" "}
+                                                            {user.lastName}
+                                                        </h3>
+                                                        <p className="text-sm text-gray-500">
+                                                            {user.email}
+                                                        </p>
+                                                        <p className="text-sm text-gray-500">
+                                                            Class of{" "}
+                                                            {
+                                                                user.graduationYear
+                                                            }{" "}
+                                                            • {user.major}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center space-x-2">
+                                                {user.verification && (
+                                                    <button className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                                        <FileText className="h-4 w-4 mr-1" />
+                                                        View Document
+                                                    </button>
+                                                )}
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleVerifyUser(
+                                                            user.id,
+                                                            true
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                                                >
+                                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                                    Verify
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleVerifyUser(
+                                                            user.id,
+                                                            false
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+                                                >
+                                                    <XCircle className="h-4 w-4 mr-1" />
+                                                    Reject
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        {user.verification && (
-                                            <button className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                                                <FileText className="h-4 w-4 mr-1" />
-                                                View Document
-                                            </button>
-                                        )}
-
-                                        <button
-                                            onClick={() =>
-                                                handleVerifyUser(user.id, true)
-                                            }
-                                            className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700"
-                                        >
-                                            <CheckCircle className="h-4 w-4 mr-1" />
-                                            Verify
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                handleVerifyUser(user.id, false)
-                                            }
-                                            className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-                                        >
-                                            <XCircle className="h-4 w-4 mr-1" />
-                                            Reject
-                                        </button>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))}
+                            )}
+                        </>
+                    )}
+
+                    {activeTab === "analytics" && (
+                        <div className="text-center py-8">
+                            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-500">
+                                Analytics coming soon
+                            </p>
+                        </div>
+                    )}
+
+                    {activeTab === "newsletter" && (
+                        <div className="text-center py-8">
+                            <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-500">
+                                Newsletter management coming soon
+                            </p>
                         </div>
                     )}
                 </div>

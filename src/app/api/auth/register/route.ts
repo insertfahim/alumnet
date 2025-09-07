@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, generateToken } from "@/lib/auth";
+import { sendEmail, emailTemplates } from "@/lib/email";
+import { env } from "@/lib/env";
 import { z } from "zod";
+import crypto from "crypto";
 
 const registerSchema = z.object({
     email: z.string().email(),
@@ -72,10 +75,54 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Send verification email if email verification is enabled
+        if (env.ENABLE_EMAIL_VERIFICATION) {
+            try {
+                // Generate verification token
+                const verificationToken = crypto
+                    .randomBytes(32)
+                    .toString("hex");
+                const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+                await prisma.emailVerificationToken.create({
+                    data: {
+                        email: user.email,
+                        token: verificationToken,
+                        expiresAt,
+                    },
+                });
+
+                // Send verification email
+                const verificationLink = `${env.APP_URL}/auth/verify-email?token=${verificationToken}`;
+                const emailTemplate = emailTemplates.emailVerification(
+                    verificationLink,
+                    user.firstName
+                );
+
+                await sendEmail({
+                    to: user.email,
+                    subject: emailTemplate.subject,
+                    html: emailTemplate.html,
+                    text: emailTemplate.text,
+                });
+            } catch (emailError) {
+                console.error("Failed to send verification email:", emailError);
+                // Don't fail the registration if email sending fails
+            }
+        }
+
         // Generate token
         const token = generateToken(user.id);
 
-        return NextResponse.json({ user, token }, { status: 201 });
+        return NextResponse.json(
+            {
+                user,
+                token,
+                requiresEmailVerification:
+                    env.ENABLE_EMAIL_VERIFICATION && !user.emailVerified,
+            },
+            { status: 201 }
+        );
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(

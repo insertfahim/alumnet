@@ -56,7 +56,7 @@ export default function RegisterPage() {
         setLoading(true);
 
         try {
-            const success = await register({
+            const result = await register({
                 email: formData.email,
                 password: formData.password,
                 firstName: formData.firstName,
@@ -66,8 +66,16 @@ export default function RegisterPage() {
                 major: formData.major,
             });
 
-            if (success) {
-                router.push("/dashboard");
+            if (result.success) {
+                if (result.requiresVerification) {
+                    router.push(
+                        `/auth/verify-email?email=${encodeURIComponent(
+                            formData.email
+                        )}`
+                    );
+                } else {
+                    router.push("/dashboard");
+                }
             } else {
                 setError("Registration failed. Please try again.");
             }

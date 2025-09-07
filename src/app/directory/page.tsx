@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import VerifiedBadge from "@/components/verification/VerifiedBadge";
 import {
     Search,
     Filter,
@@ -27,6 +28,7 @@ const mockAlumni: User[] = [
         location: "Dhaka, Bangladesh",
         bio: "BRACU CSE graduate passionate about mobile app development and AI. Currently working on innovative tech solutions in Bangladesh.",
         isVerified: true,
+        role: "ALUMNI",
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -43,6 +45,7 @@ const mockAlumni: User[] = [
         location: "Dhaka, Bangladesh",
         bio: "BRAC Business School graduate with expertise in financial services and digital banking solutions.",
         isVerified: true,
+        role: "ALUMNI",
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -59,6 +62,7 @@ const mockAlumni: User[] = [
         location: "Geneva, Switzerland",
         bio: "BRACU JPGSPH graduate working on global health initiatives. Specializing in epidemiology and health policy.",
         isVerified: true,
+        role: "ALUMNI",
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -75,6 +79,7 @@ const mockAlumni: User[] = [
         location: "Dhaka, Bangladesh",
         bio: "BRACU School of Architecture graduate passionate about sustainable design and urban planning in Bangladesh.",
         isVerified: true,
+        role: "ALUMNI",
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -91,6 +96,7 @@ const mockAlumni: User[] = [
         location: "Dhaka, Bangladesh",
         bio: "BRACU English graduate working in journalism. Covering social issues and development stories in Bangladesh.",
         isVerified: true,
+        role: "ALUMNI",
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -107,6 +113,7 @@ const mockAlumni: User[] = [
         location: "Dhaka, Bangladesh",
         bio: "BRACU EEE graduate specializing in telecommunications and network infrastructure in Bangladesh.",
         isVerified: true,
+        role: "ALUMNI",
         createdAt: new Date(),
         updatedAt: new Date(),
     },
@@ -385,14 +392,15 @@ export default function DirectoryPage() {
                                     </span>
                                 </div>
                                 <div className="ml-3">
-                                    <h3 className="text-lg font-semibold text-gray-900">
-                                        {person.firstName} {person.lastName}
-                                    </h3>
-                                    {person.isVerified && (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Verified
-                                        </span>
-                                    )}
+                                    <div className="flex items-center space-x-2">
+                                        <h3 className="text-lg font-semibold text-gray-900">
+                                            {person.firstName} {person.lastName}
+                                        </h3>
+                                        <VerifiedBadge
+                                            isVerified={person.isVerified}
+                                            size="sm"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

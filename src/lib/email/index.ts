@@ -170,4 +170,69 @@ export const emailTemplates = {
       </html>
     `,
     }),
+
+    emailVerification: (verificationLink: string, firstName: string) => ({
+        subject: "Verify Your BRACU Alumni Portal Email",
+        html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Email Verification</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #6366f1; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .button { 
+              display: inline-block; 
+              background: #6366f1; 
+              color: white; 
+              padding: 12px 24px; 
+              text-decoration: none; 
+              border-radius: 5px; 
+              margin: 20px 0; 
+            }
+            .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>BRAC University Alumni Portal</h1>
+            </div>
+            <div class="content">
+              <h2>Verify Your Email Address</h2>
+              <p>Hello ${firstName},</p>
+              <p>Welcome to the BRAC University Alumni Portal! To complete your registration and start connecting with fellow alumni, please verify your email address.</p>
+              <p>Click the button below to verify your email:</p>
+              <a href="${verificationLink}" class="button">Verify Email Address</a>
+              <p>If you didn't create this account, please ignore this email.</p>
+              <p>This verification link will expire in 24 hours for security reasons.</p>
+              <p>Best regards,<br>The BRACU Alumni Portal Team</p>
+            </div>
+            <div class="footer">
+              <p>© 2024 BRAC University Alumni Portal. All rights reserved.</p>
+              <p>This is an automated message, please do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+        text: `
+      Hello ${firstName},
+
+      Welcome to the BRAC University Alumni Portal! To complete your registration, please verify your email address.
+
+      Click the link below to verify your email:
+      ${verificationLink}
+
+      If you didn't create this account, please ignore this email.
+
+      This verification link will expire in 24 hours for security reasons.
+
+      Best regards,
+      The BRACU Alumni Portal Team
+    `,
+    }),
 };
