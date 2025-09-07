@@ -42,6 +42,12 @@ export function Navigation() {
                             {user && (
                                 <>
                                     <Link
+                                        href="/dashboard"
+                                        className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
+                                    >
+                                        Dashboard
+                                    </Link>
+                                    <Link
                                         href="/directory"
                                         className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
                                     >
@@ -132,6 +138,12 @@ export function Navigation() {
                     <div className="pt-2 pb-3 space-y-1">
                         {user ? (
                             <>
+                                <Link
+                                    href="/dashboard"
+                                    className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                >
+                                    Dashboard
+                                </Link>
                                 <Link
                                     href="/directory"
                                     className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"

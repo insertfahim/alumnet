@@ -29,28 +29,6 @@ async function handler(req: AuthenticatedRequest) {
             },
         });
 
-        // Create verification record if verified
-        if (isVerified) {
-            await prisma.verification.upsert({
-                where: { userId },
-                create: {
-                    userId,
-                    verifiedById: req.user!.id,
-                    verifiedAt: new Date(),
-                    documentKey: "", // Will be updated when document is uploaded
-                },
-                update: {
-                    verifiedById: req.user!.id,
-                    verifiedAt: new Date(),
-                },
-            });
-        } else {
-            // Remove verification if unverified
-            await prisma.verification.deleteMany({
-                where: { userId },
-            });
-        }
-
         return NextResponse.json({
             success: true,
             user,

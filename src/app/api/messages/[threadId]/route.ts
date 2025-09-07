@@ -54,16 +54,6 @@ async function getThreadMessages(
         // Get messages
         const messages = await prisma.threadMessage.findMany({
             where: { threadId },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        profilePicture: true,
-                    },
-                },
-            },
             orderBy: { createdAt: "desc" },
             take: limit,
             skip: offset,
@@ -142,16 +132,6 @@ async function sendMessage(req: AuthenticatedRequest, { params }: PageParams) {
                 senderId: req.user!.id,
                 content,
                 readBy: [req.user!.id], // Sender automatically reads their own message
-            },
-            include: {
-                sender: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        profilePicture: true,
-                    },
-                },
             },
         });
 

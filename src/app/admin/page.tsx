@@ -23,10 +23,6 @@ interface UnverifiedUser {
     graduationYear: number;
     major: string;
     createdAt: string;
-    verification?: {
-        documentKey: string;
-        createdAt: string;
-    };
 }
 
 export default function AdminDashboard() {
@@ -279,13 +275,6 @@ export default function AdminDashboard() {
                                             </div>
 
                                             <div className="flex items-center space-x-2">
-                                                {user.verification && (
-                                                    <button className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                                                        <FileText className="h-4 w-4 mr-1" />
-                                                        View Document
-                                                    </button>
-                                                )}
-
                                                 <button
                                                     onClick={() =>
                                                         handleVerifyUser(

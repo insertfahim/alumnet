@@ -18,12 +18,6 @@ async function handler(req: AuthenticatedRequest) {
                 graduationYear: true,
                 major: true,
                 createdAt: true,
-                verification: {
-                    select: {
-                        documentKey: true,
-                        createdAt: true,
-                    },
-                },
             },
             orderBy: { createdAt: "desc" },
         });

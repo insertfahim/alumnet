@@ -11,7 +11,7 @@ export interface AuthenticatedRequest extends NextRequest {
     };
 }
 
-export async function withAuth(
+export function withAuth(
     handler: (
         req: AuthenticatedRequest,
         context?: any
@@ -85,7 +85,10 @@ export function requireAdmin(
 }
 
 export function requireAuth(
-    handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+    handler: (
+        req: AuthenticatedRequest,
+        ...args: any[]
+    ) => Promise<NextResponse>
 ) {
     return withAuth(handler);
 }

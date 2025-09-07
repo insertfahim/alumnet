@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import { env } from "@/lib/env";
 
 // Create transporter
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
     secure: env.SMTP_PORT === 465, // true for 465, false for other ports
