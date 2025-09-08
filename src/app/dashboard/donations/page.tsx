@@ -17,6 +17,7 @@ import {
     AlertCircle,
     CheckCircle,
     Clock,
+    FileText,
 } from "lucide-react";
 import { Donation, Receipt as ReceiptType } from "@/types";
 import toast from "react-hot-toast";
@@ -229,12 +230,20 @@ export default function DonationDashboard() {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <CardTitle>Donation History</CardTitle>
-                            <Link href="/donations">
-                                <Button>
-                                    <Heart className="h-4 w-4 mr-2" />
-                                    Make Another Donation
-                                </Button>
-                            </Link>
+                            <div className="flex gap-2">
+                                <Link href="/dashboard/proposals">
+                                    <Button variant="outline">
+                                        <FileText className="h-4 w-4 mr-2" />
+                                        My Proposals
+                                    </Button>
+                                </Link>
+                                <Link href="/donations">
+                                    <Button>
+                                        <Heart className="h-4 w-4 mr-2" />
+                                        Make Another Donation
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
                     </CardHeader>
 

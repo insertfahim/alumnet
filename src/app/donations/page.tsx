@@ -18,6 +18,7 @@ import {
     Filter,
     Plus,
     Settings,
+    FileText,
 } from "lucide-react";
 import { FundraisingCampaign } from "@/types";
 
@@ -263,10 +264,10 @@ export default function DonationsPage() {
                                                 className="w-full"
                                             >
                                                 <Link
-                                                    href="/dashboard/donations"
+                                                    href="/dashboard/proposals"
                                                     className="flex items-center gap-2"
                                                 >
-                                                    <Heart className="h-4 w-4" />
+                                                    <FileText className="h-4 w-4" />
                                                     My Proposals
                                                 </Link>
                                             </Button>

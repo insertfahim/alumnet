@@ -138,6 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("user");
         setToken(null);
         setUser(null);
+        // Redirect to home page
+        window.location.href = "/";
     };
 
     const register = async (

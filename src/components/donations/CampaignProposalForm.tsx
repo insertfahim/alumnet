@@ -13,6 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogOverlay,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -157,15 +158,16 @@ export function CampaignProposalForm({
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <Button className="w-full">
+            <DialogTrigger>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 shadow-lg">
                     <Plus className="h-4 w-4 mr-2" />
                     {existingCampaign
                         ? "Edit Campaign"
-                        : "Propose New Campaign"}
+                        : "Create New Campaign Proposal"}
                 </Button>
             </DialogTrigger>
 
+            <DialogOverlay />
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">

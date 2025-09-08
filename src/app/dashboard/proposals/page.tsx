@@ -176,7 +176,24 @@ export default function UserProposalsPage() {
             <div className="max-w-6xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            My Campaign Proposals
+                        </h1>
+                        <p className="text-gray-600 mt-2">
+                            Track and manage your fundraising campaign
+                            submissions
+                        </p>
+                        {/* Debug info */}
+                        <div className="mt-2 text-xs text-gray-500">
+                            User:{" "}
+                            {user
+                                ? `${user.firstName} ${user.lastName} (${user.role})`
+                                : "Not logged in"}
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-4">
+                        <CampaignProposalForm onSuccess={fetchUserCampaigns} />
                         <Button variant="outline" size="sm">
                             <Link
                                 href="/donations"
@@ -186,17 +203,7 @@ export default function UserProposalsPage() {
                                 Back to Donations
                             </Link>
                         </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                My Campaign Proposals
-                            </h1>
-                            <p className="text-gray-600 mt-2">
-                                Track and manage your fundraising campaign
-                                submissions
-                            </p>
-                        </div>
                     </div>
-                    <CampaignProposalForm onSuccess={fetchUserCampaigns} />
                 </div>
 
                 {/* Stats Cards */}
@@ -328,12 +335,27 @@ export default function UserProposalsPage() {
                                         </h3>
                                         <p className="text-gray-600 mb-6">
                                             {activeTab === "all"
-                                                ? "You haven't submitted any campaign proposals yet."
+                                                ? "You haven't submitted any campaign proposals yet. Start your first fundraising campaign!"
                                                 : `No ${activeTab} proposals found.`}
                                         </p>
-                                        <CampaignProposalForm
-                                            onSuccess={fetchUserCampaigns}
-                                        />
+                                        {activeTab === "all" && (
+                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                                                <h4 className="text-lg font-semibold text-blue-900 mb-2">
+                                                    Ready to make a difference?
+                                                </h4>
+                                                <p className="text-blue-700 mb-4">
+                                                    Create your first campaign
+                                                    proposal and start raising
+                                                    funds for causes that matter
+                                                    to our alumni community.
+                                                </p>
+                                                <CampaignProposalForm
+                                                    onSuccess={
+                                                        fetchUserCampaigns
+                                                    }
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
