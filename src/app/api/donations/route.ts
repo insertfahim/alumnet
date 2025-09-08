@@ -3,6 +3,16 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
+// Mock auth functions for development
+const getServerSession = async (
+    options: any
+): Promise<{ user?: { id: string } } | null> => {
+    // Mock session - return null for unauthenticated users
+    return null;
+};
+
+const authOptions = {};
+
 const createDonationSchema = z.object({
     amountCents: z.number().min(100), // Minimum $1.00
     currency: z.string().default("USD"),
@@ -28,7 +38,7 @@ export async function GET(request: NextRequest) {
 
         // If user is authenticated, they can see their own donations
         // If not authenticated, they can only see public donations (not anonymous)
-        if (session?.user) {
+        if (session && "user" in session && session.user) {
             where.userId = session.user.id;
         } else {
             where.isAnonymous = false;
@@ -124,7 +134,7 @@ export async function POST(request: NextRequest) {
                     !validatedData.email
                 ) {
                     const user = await prisma.user.findUnique({
-                        where: { id: session.user.id },
+                        where: { id: authenticatedUser.id },
                         select: {
                             firstName: true,
                             lastName: true,

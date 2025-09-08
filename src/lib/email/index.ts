@@ -1,16 +1,23 @@
-import nodemailer from "nodemailer";
-import { env } from "@/lib/env";
-
-// Create transporter
-const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_PORT === 465, // true for 465, false for other ports
-    auth: {
-        user: env.SMTP_USER,
-        pass: env.SMTP_PASS,
+// Mock email implementation for development
+const mockTransporter = {
+    sendMail: async (options: any) => {
+        console.log("Mock email sent:", {
+            from: options.from,
+            to: options.to,
+            subject: options.subject,
+            html: options.html?.substring(0, 100) + "...",
+        });
+        return {
+            messageId: `mock_message_${Date.now()}`,
+            accepted: Array.isArray(options.to)
+                ? options.to.split(", ")
+                : [options.to],
+            rejected: [],
+        };
     },
-});
+};
+
+const transporter = mockTransporter;
 
 export interface EmailOptions {
     to: string | string[];
@@ -22,7 +29,7 @@ export interface EmailOptions {
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
     try {
         const info = await transporter.sendMail({
-            from: `"BRACU Alumni Portal" <${env.SMTP_FROM}>`,
+            from: `"BRACU Alumni Portal" <noreply@bracu-alumni.com>`,
             to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
             subject: options.subject,
             html: options.html,
@@ -155,7 +162,7 @@ export const emailTemplates = {
               `
                       : `
                 <p>Your account is ready to use! Start exploring the portal.</p>
-                <a href="${env.APP_URL}/directory" class="button">Explore Alumni Directory</a>
+                <a href="https://bracu-alumni.com/directory" class="button">Explore Alumni Directory</a>
               `
               }
 

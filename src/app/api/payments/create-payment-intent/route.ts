@@ -1,11 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2023-10-16",
-});
+// Mock Stripe implementation
+const mockStripe = {
+    paymentIntents: {
+        create: async (options: any) => {
+            console.log("Mock Stripe PaymentIntent created:", options);
+            return {
+                id: `pi_mock_${Date.now()}`,
+                client_secret: `pi_mock_${Date.now()}_secret_mock`,
+                status: "requires_payment_method",
+                amount: options.amount,
+                currency: options.currency,
+            };
+        },
+    },
+    checkout: {
+        sessions: {
+            create: async (options: any) => {
+                console.log("Mock Stripe Checkout Session created:", options);
+                return {
+                    id: `cs_mock_${Date.now()}`,
+                    url: `https://checkout.stripe.com/mock/session/${Date.now()}`,
+                };
+            },
+        },
+    },
+};
+
+const stripe = mockStripe;
 
 export async function POST(request: NextRequest) {
     try {

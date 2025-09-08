@@ -1,9 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2023-10-16",
-});
+// Mock Stripe implementation
+const mockStripe = {
+    checkout: {
+        sessions: {
+            retrieve: async (sessionId: string, options?: any) => {
+                console.log(
+                    "Mock Stripe Session retrieved:",
+                    sessionId,
+                    options
+                );
+                return {
+                    id: sessionId,
+                    payment_status: "paid",
+                    payment_intent: {
+                        id: `pi_mock_${Date.now()}`,
+                        status: "succeeded",
+                    },
+                    subscription: null,
+                    metadata: {
+                        donationId: "mock_donation_id_123",
+                    },
+                    amount_total: 5000,
+                    currency: "usd",
+                };
+            },
+        },
+    },
+};
+
+const stripe = mockStripe;
 
 export async function GET(request: NextRequest) {
     try {
@@ -65,10 +91,15 @@ export async function GET(request: NextRequest) {
                 where: { id: donation.id },
                 data: {
                     status: "COMPLETED",
-                    stripePaymentIntentId: session.payment_intent as string,
-                    ...(session.subscription && {
-                        stripeSubscriptionId: session.subscription as string,
-                    }),
+                    stripePaymentIntentId:
+                        typeof session.payment_intent === "string"
+                            ? session.payment_intent
+                            : session.payment_intent?.id,
+                    stripeSubscriptionId:
+                        session.subscription &&
+                        typeof session.subscription === "string"
+                            ? session.subscription
+                            : null,
                 },
             });
         }

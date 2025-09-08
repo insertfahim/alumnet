@@ -140,7 +140,7 @@ export default function DonationsPage() {
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <div className="max-w-7xl mx-auto px-4 py-16">
+                <div className="max-w-full mx-auto px-4 py-16">
                     <div className="text-center">
                         <Heart className="h-16 w-16 mx-auto mb-4 text-white" />
                         <h1 className="text-4xl font-bold mb-4">
@@ -184,7 +184,7 @@ export default function DonationsPage() {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="max-w-full mx-auto px-4 py-12">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Sidebar */}
                     <div className="lg:w-1/4">

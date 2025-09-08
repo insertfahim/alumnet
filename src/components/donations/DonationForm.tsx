@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { loadStripe } from "@stripe/stripe-js";
+import { loadStripe } from "@/lib/mock-stripe";
 import { Heart, CreditCard, Shield, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 

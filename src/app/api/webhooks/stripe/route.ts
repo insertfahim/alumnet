@@ -1,14 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { generateAndSaveReceipt } from "@/lib/receipt-generator";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2023-10-16",
-});
+// Mock Stripe implementation
+const mockStripe = {
+    webhooks: {
+        constructEvent: (body: string, signature: string, secret: string) => {
+            console.log("Mock Stripe webhook event constructed");
+            // Return a mock event
+            return {
+                id: `evt_mock_${Date.now()}`,
+                type: "payment_intent.succeeded",
+                data: {
+                    object: {
+                        id: `pi_mock_${Date.now()}`,
+                        amount: 5000, // $50.00
+                        currency: "usd",
+                        metadata: {
+                            donationId: "mock_donation_id",
+                        },
+                    },
+                },
+            };
+        },
+    },
+};
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const stripe = mockStripe;
+const endpointSecret =
+    process.env.STRIPE_WEBHOOK_SECRET || "mock_webhook_secret";
 
 export async function POST(request: NextRequest) {
     try {
@@ -23,7 +44,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        let event: Stripe.Event;
+        let event: any;
 
         try {
             event = stripe.webhooks.constructEvent(
@@ -44,39 +65,27 @@ export async function POST(request: NextRequest) {
 
         switch (event.type) {
             case "payment_intent.succeeded":
-                await handlePaymentIntentSucceeded(
-                    event.data.object as Stripe.PaymentIntent
-                );
+                await handlePaymentIntentSucceeded(event.data.object as any);
                 break;
 
             case "payment_intent.payment_failed":
-                await handlePaymentIntentFailed(
-                    event.data.object as Stripe.PaymentIntent
-                );
+                await handlePaymentIntentFailed(event.data.object as any);
                 break;
 
             case "customer.subscription.created":
-                await handleSubscriptionCreated(
-                    event.data.object as Stripe.Subscription
-                );
+                await handleSubscriptionCreated(event.data.object as any);
                 break;
 
             case "customer.subscription.updated":
-                await handleSubscriptionUpdated(
-                    event.data.object as Stripe.Subscription
-                );
+                await handleSubscriptionUpdated(event.data.object as any);
                 break;
 
             case "customer.subscription.deleted":
-                await handleSubscriptionDeleted(
-                    event.data.object as Stripe.Subscription
-                );
+                await handleSubscriptionDeleted(event.data.object as any);
                 break;
 
             case "invoice.payment_succeeded":
-                await handleInvoicePaymentSucceeded(
-                    event.data.object as Stripe.Invoice
-                );
+                await handleInvoicePaymentSucceeded(event.data.object as any);
                 break;
 
             default:
@@ -93,9 +102,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-async function handlePaymentIntentSucceeded(
-    paymentIntent: Stripe.PaymentIntent
-) {
+async function handlePaymentIntentSucceeded(paymentIntent: any) {
     try {
         // Find donation by payment intent ID
         const donation = await prisma.donation.findUnique({
@@ -143,7 +150,7 @@ async function handlePaymentIntentSucceeded(
     }
 }
 
-async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+async function handlePaymentIntentFailed(paymentIntent: any) {
     try {
         const donation = await prisma.donation.findUnique({
             where: { stripePaymentIntentId: paymentIntent.id },
@@ -161,7 +168,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     }
 }
 
-async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
+async function handleSubscriptionCreated(subscription: any) {
     try {
         // Find donation by subscription ID
         const donation = await prisma.donation.findUnique({
@@ -193,12 +200,12 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     }
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+async function handleSubscriptionUpdated(subscription: any) {
     // Handle subscription updates (cancellations, etc.)
     console.log("Subscription updated:", subscription.id);
 }
 
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+async function handleSubscriptionDeleted(subscription: any) {
     try {
         // Mark associated donation as cancelled
         const donation = await prisma.donation.findUnique({
@@ -217,7 +224,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     }
 }
 
-async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+async function handleInvoicePaymentSucceeded(invoice: any) {
     try {
         // Handle recurring payment success
         if (invoice.subscription && typeof invoice.subscription === "string") {

@@ -31,7 +31,7 @@ const NewsletterSection = dynamic(
 // Loading skeleton components
 function DashboardSkeleton() {
     return (
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-full mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <div className="animate-pulse">
                 <div className="h-8 bg-gray-200 rounded w-1/3 mb-8"></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -153,7 +153,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-full mx-auto py-8 px-4 sm:px-6 lg:px-8">
             {/* Welcome Header */}
             <div className="mb-8">
                 <div className="flex items-center justify-between">

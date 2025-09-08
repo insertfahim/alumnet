@@ -220,7 +220,7 @@ export default function AdminDonationsPage() {
                         open={isCreateDialogOpen}
                         onOpenChange={setIsCreateDialogOpen}
                     >
-                        <DialogTrigger asChild>
+                        <DialogTrigger>
                             <Button
                                 onClick={() => {
                                     setEditingCampaign(null);
