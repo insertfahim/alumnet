@@ -81,14 +81,17 @@ export function PostJobForm({ onClose, onSuccess }: PostJobFormProps) {
                 }),
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
+            if (response.ok) {
+                alert("Job posted successfully!");
+                onSuccess();
+                onClose();
+            } else if (response.status === 401) {
+                setError("Your session has expired. Please log in again to continue.");
+                window.location.href = "/login";
+            } else {
+                const data = await response.json();
                 throw new Error(data.error || "Failed to post job");
             }
-
-            onSuccess();
-            onClose();
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to post job");
         } finally {

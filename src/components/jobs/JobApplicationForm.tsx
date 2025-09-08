@@ -51,13 +51,15 @@ export function JobApplicationForm({
                 }),
             });
 
-            const data = await response.json();
-
             if (response.ok) {
                 onSuccess();
                 onClose();
                 alert("Application submitted successfully!");
+            } else if (response.status === 401) {
+                alert("Your session has expired. Please log in again to continue.");
+                window.location.href = "/login";
             } else {
+                const data = await response.json();
                 alert(data.error || "Failed to submit application");
             }
         } catch (error) {
