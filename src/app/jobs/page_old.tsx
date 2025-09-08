@@ -44,11 +44,10 @@ export default function JobsPage() {
         try {
             setLoading(true);
             const queryParams = new URLSearchParams();
-
+            
             if (searchTerm) queryParams.append("search", searchTerm);
             if (filters.type) queryParams.append("type", filters.type);
-            if (filters.location)
-                queryParams.append("location", filters.location);
+            if (filters.location) queryParams.append("location", filters.location);
             if (filters.remote) queryParams.append("remote", filters.remote);
             if (filters.company) queryParams.append("company", filters.company);
 
@@ -128,22 +127,7 @@ export default function JobsPage() {
         setFilteredJobs(filtered);
     };
 
-    const clearFilters = () => {
-        setFilters({
-            type: "",
-            location: "",
-            remote: "",
-            company: "",
-        });
-        setSearchTerm("");
-    };
-
     const handleApply = (job: Job) => {
-        if (!user) {
-            alert("Please log in to apply for jobs");
-            window.location.href = "/login";
-            return;
-        }
         setSelectedJobForApplication(job);
         setShowApplicationForm(true);
     };
@@ -151,30 +135,11 @@ export default function JobsPage() {
     const handleApplicationSuccess = () => {
         // Refresh the jobs list to update application counts
         fetchJobs();
-        setShowApplicationForm(false);
-        setSelectedJobForApplication(null);
-        // Optionally switch to applications tab to show the new application
-        setActiveTab("applications");
     };
 
     const handlePostJobSuccess = () => {
         // Refresh the jobs list to show the new job
         fetchJobs();
-    };
-
-    const getJobTypeColor = (type: string) => {
-        switch (type) {
-            case "FULL_TIME":
-                return "bg-green-100 text-green-800";
-            case "PART_TIME":
-                return "bg-blue-100 text-blue-800";
-            case "CONTRACT":
-                return "bg-purple-100 text-purple-800";
-            case "INTERNSHIP":
-                return "bg-orange-100 text-orange-800";
-            default:
-                return "bg-gray-100 text-gray-800";
-        }
     };
 
     const formatJobType = (type: string) => {
@@ -190,17 +155,6 @@ export default function JobsPage() {
             default:
                 return type;
         }
-    };
-
-    const getDaysAgo = (date: Date) => {
-        const now = new Date();
-        const jobDate = new Date(date);
-        const diffTime = Math.abs(now.getTime() - jobDate.getTime());
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) return "Today";
-        if (diffDays === 1) return "1 day ago";
-        return `${diffDays} days ago`;
     };
 
     const isJobExpired = (expiresAt: Date) => {
@@ -219,6 +173,99 @@ export default function JobsPage() {
             </div>
         );
     }
+        if (filters.type) {
+            filtered = filtered.filter((job) => job.type === filters.type);
+        }
+
+        // Filter by location
+        if (filters.location) {
+            filtered = filtered.filter((job) =>
+                job.location
+                    .toLowerCase()
+                    .includes(filters.location.toLowerCase())
+            );
+        }
+
+        // Filter by remote
+        if (filters.remote) {
+            const isRemote = filters.remote === "true";
+            filtered = filtered.filter((job) => job.remote === isRemote);
+        }
+
+        // Filter by company
+        if (filters.company) {
+            filtered = filtered.filter((job) =>
+                job.company
+                    .toLowerCase()
+                    .includes(filters.company.toLowerCase())
+            );
+        }
+
+        setFilteredJobs(filtered);
+    };
+
+    const clearFilters = () => {
+        setFilters({
+            type: "",
+            location: "",
+            remote: "",
+            company: "",
+        });
+        setSearchTerm("");
+    };
+
+    const handleApply = (jobId: string) => {
+        if (!user) {
+            alert("Please log in to apply for jobs");
+            window.location.href = "/login";
+            return;
+        }
+
+        const job = jobs.find((j) => j.id === jobId);
+        if (job) {
+            setSelectedJobForApplication(job);
+            setShowApplicationForm(true);
+        }
+    };
+
+    const handleApplicationSuccess = () => {
+        // Refresh the jobs or show success message
+        setShowApplicationForm(false);
+        setSelectedJobForApplication(null);
+        // Optionally switch to applications tab to show the new application
+        setActiveTab("applications");
+    };
+
+    const getJobTypeColor = (type: string) => {
+        switch (type) {
+            case "full-time":
+                return "bg-green-100 text-green-800";
+            case "part-time":
+                return "bg-blue-100 text-blue-800";
+            case "contract":
+                return "bg-purple-100 text-purple-800";
+            case "internship":
+                return "bg-orange-100 text-orange-800";
+            default:
+                return "bg-gray-100 text-gray-800";
+        }
+    };
+
+    const formatJobType = (type: string) => {
+        return type
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+    };
+
+    const getDaysAgo = (date: Date) => {
+        const days = Math.floor(
+            (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (days === 0) return "Today";
+        if (days === 1) return "1 day ago";
+        return `${days} days ago`;
+    };
 
     return (
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -232,10 +279,7 @@ export default function JobsPage() {
                         worldwide
                     </p>
                 </div>
-                <button
-                    className="btn-primary flex items-center"
-                    onClick={() => setShowPostJobForm(true)}
-                >
+                <button className="btn-primary flex items-center">
                     <Plus className="w-5 h-5 mr-2" />
                     Post a Job
                 </button>
@@ -331,16 +375,16 @@ export default function JobsPage() {
                                             className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                                         >
                                             <option value="">All Types</option>
-                                            <option value="FULL_TIME">
+                                            <option value="full-time">
                                                 Full Time
                                             </option>
-                                            <option value="PART_TIME">
+                                            <option value="part-time">
                                                 Part Time
                                             </option>
-                                            <option value="CONTRACT">
+                                            <option value="contract">
                                                 Contract
                                             </option>
-                                            <option value="INTERNSHIP">
+                                            <option value="internship">
                                                 Internship
                                             </option>
                                         </select>
@@ -364,7 +408,7 @@ export default function JobsPage() {
                                                 }))
                                             }
                                             className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                                            placeholder="e.g., Dhaka"
+                                            placeholder="e.g., San Francisco"
                                         />
                                     </div>
 
@@ -414,7 +458,7 @@ export default function JobsPage() {
                                                 }))
                                             }
                                             className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                                            placeholder="e.g., Samsung"
+                                            placeholder="e.g., Google"
                                         />
                                     </div>
                                 </div>
@@ -444,11 +488,7 @@ export default function JobsPage() {
                         {filteredJobs.map((job) => (
                             <div
                                 key={job.id}
-                                className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow ${
-                                    isJobExpired(job.expiresAt)
-                                        ? "opacity-60"
-                                        : ""
-                                }`}
+                                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
                             >
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex-1">
@@ -466,11 +506,6 @@ export default function JobsPage() {
                                             {job.remote && (
                                                 <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                     Remote OK
-                                                </span>
-                                            )}
-                                            {isJobExpired(job.expiresAt) && (
-                                                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                    Expired
                                                 </span>
                                             )}
                                         </div>
@@ -512,33 +547,15 @@ export default function JobsPage() {
                                                         )}
                                                     </span>
                                                 </div>
-                                                <span className="mx-2">•</span>
-                                                <div className="flex items-center">
-                                                    <Users className="w-4 h-4 mr-1" />
-                                                    <span>
-                                                        {
-                                                            job.applications
-                                                                .length
-                                                        }{" "}
-                                                        applications
-                                                    </span>
-                                                </div>
                                             </div>
 
                                             <button
-                                                onClick={() => handleApply(job)}
-                                                disabled={isJobExpired(
-                                                    job.expiresAt
-                                                )}
-                                                className={`btn-primary ${
-                                                    isJobExpired(job.expiresAt)
-                                                        ? "opacity-50 cursor-not-allowed"
-                                                        : ""
-                                                }`}
+                                                onClick={() =>
+                                                    handleApply(job.id)
+                                                }
+                                                className="btn-primary"
                                             >
-                                                {isJobExpired(job.expiresAt)
-                                                    ? "Expired"
-                                                    : "Apply Now"}
+                                                Apply Now
                                             </button>
                                         </div>
                                     </div>
@@ -576,7 +593,7 @@ export default function JobsPage() {
                         ))}
                     </div>
 
-                    {filteredJobs.length === 0 && !loading && (
+                    {filteredJobs.length === 0 && (
                         <div className="text-center py-12">
                             <div className="text-gray-500 mb-4">
                                 <Briefcase className="h-16 w-16 mx-auto" />
@@ -593,14 +610,6 @@ export default function JobsPage() {
                 </>
             ) : (
                 <MyApplications />
-            )}
-
-            {/* Post Job Form Modal */}
-            {showPostJobForm && (
-                <PostJobForm
-                    onClose={() => setShowPostJobForm(false)}
-                    onSuccess={handlePostJobSuccess}
-                />
             )}
 
             {/* Job Application Form Modal */}
