@@ -106,7 +106,7 @@ export interface JobApplication {
     applicant: User;
     coverLetter?: string;
     resumeUrl?: string;
-    status: "pending" | "reviewed" | "rejected" | "accepted";
+    status: "PENDING" | "REVIEWED" | "REJECTED" | "ACCEPTED";
     createdAt: Date;
 }
 
