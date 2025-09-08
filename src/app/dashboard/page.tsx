@@ -16,6 +16,26 @@ import {
     Settings,
     Edit,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
+
+// Lazy load the NewsletterSection component
+const NewsletterSection = dynamic(
+    () => import("@/components/dashboard/NewsletterSection"),
+    {
+        loading: () => (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                    <div className="space-y-3">
+                        <div className="h-3 bg-gray-200 rounded"></div>
+                        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                    </div>
+                </div>
+            </div>
+        ),
+    }
+);
 
 interface DashboardStats {
     totalConnections: number;
@@ -35,66 +55,49 @@ interface RecentActivity {
 export default function Dashboard() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
-    const [stats, setStats] = useState<DashboardStats>({
-        totalConnections: 0,
-        upcomingEvents: 0,
-        jobApplications: 0,
-        unreadMessages: 0,
-    });
-    const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
-        []
-    );
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (authLoading) return; // Wait for auth check to complete
-
-        if (!user) {
-            router.push("/login");
-            return;
-        }
-
-        fetchDashboardData();
-    }, [user, authLoading, router]);
-
-    const fetchDashboardData = async () => {
-        try {
-            // Fetch dashboard stats
-            const statsResponse = await fetch("/api/dashboard/stats", {
+    // Fetch dashboard stats
+    const { data: stats, isLoading: statsLoading } = useQuery({
+        queryKey: ["dashboard-stats"],
+        queryFn: async () => {
+            const response = await fetch("/api/dashboard/stats", {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
             });
+            if (!response.ok) throw new Error("Failed to fetch stats");
+            return response.json();
+        },
+        enabled: !!user && !authLoading,
+        staleTime: 1000 * 60 * 2, // 2 minutes
+    });
 
-            if (statsResponse.ok) {
-                const statsData = await statsResponse.json();
-                setStats(statsData);
-            }
+    // Fetch recent activities
+    const { data: activitiesData, isLoading: activitiesLoading } = useQuery({
+        queryKey: ["dashboard-activities"],
+        queryFn: async () => {
+            const response = await fetch("/api/dashboard/activities", {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            });
+            if (!response.ok) throw new Error("Failed to fetch activities");
+            return response.json();
+        },
+        enabled: !!user && !authLoading,
+        staleTime: 1000 * 60 * 2, // 2 minutes
+    });
 
-            // Fetch recent activities
-            const activitiesResponse = await fetch(
-                "/api/dashboard/activities",
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem(
-                            "token"
-                        )}`,
-                    },
-                }
-            );
-
-            if (activitiesResponse.ok) {
-                const activitiesData = await activitiesResponse.json();
-                setRecentActivities(activitiesData.activities);
-            }
-        } catch (error) {
-            console.error("Failed to fetch dashboard data:", error);
-        } finally {
-            setLoading(false);
-        }
+    const dashboardStats: DashboardStats = stats || {
+        totalConnections: 0,
+        upcomingEvents: 0,
+        jobApplications: 0,
+        unreadMessages: 0,
     };
+    const recentActivities: RecentActivity[] = activitiesData?.activities || [];
+    const loading = authLoading || statsLoading || activitiesLoading;
 
-    if (authLoading || loading) {
+    if (authLoading || statsLoading || activitiesLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
@@ -151,7 +154,7 @@ export default function Dashboard() {
                                 Connections
                             </p>
                             <p className="text-2xl font-semibold text-gray-900">
-                                {stats.totalConnections}
+                                {dashboardStats.totalConnections}
                             </p>
                         </div>
                     </div>
@@ -165,7 +168,7 @@ export default function Dashboard() {
                                 Upcoming Events
                             </p>
                             <p className="text-2xl font-semibold text-gray-900">
-                                {stats.upcomingEvents}
+                                {dashboardStats.upcomingEvents}
                             </p>
                         </div>
                     </div>
@@ -179,7 +182,7 @@ export default function Dashboard() {
                                 Job Applications
                             </p>
                             <p className="text-2xl font-semibold text-gray-900">
-                                {stats.jobApplications}
+                                {dashboardStats.jobApplications}
                             </p>
                         </div>
                     </div>
@@ -193,7 +196,7 @@ export default function Dashboard() {
                                 Unread Messages
                             </p>
                             <p className="text-2xl font-semibold text-gray-900">
-                                {stats.unreadMessages}
+                                {dashboardStats.unreadMessages}
                             </p>
                         </div>
                     </div>
@@ -325,6 +328,9 @@ export default function Dashboard() {
                             </div>
                         )}
                     </div>
+
+                    {/* Newsletters */}
+                    <NewsletterSection />
                 </div>
 
                 {/* Sidebar */}

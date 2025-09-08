@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { User, Menu, X, LogOut, Settings, Users } from "lucide-react";
+import { User, Menu, X, LogOut, Settings, Users, Shield } from "lucide-react";
 
 export function Navigation() {
     const [isOpen, setIsOpen] = useState(false);
@@ -41,6 +41,15 @@ export function Navigation() {
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                             {user && (
                                 <>
+                                    {user.role === "ADMIN" && (
+                                        <Link
+                                            href="/admin"
+                                            className="text-red-600 hover:text-red-700 inline-flex items-center px-1 pt-1 border-b-2 border-red-300 hover:border-red-400 text-sm font-medium"
+                                        >
+                                            <Shield className="h-4 w-4 mr-1" />
+                                            Admin
+                                        </Link>
+                                    )}
                                     <Link
                                         href="/dashboard"
                                         className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
@@ -93,9 +102,10 @@ export function Navigation() {
                                     {user.role === "ADMIN" && (
                                         <Link
                                             href="/admin"
-                                            className="text-red-600 hover:text-red-700 px-3 py-1 rounded-md text-sm font-medium border border-red-200 hover:border-red-300"
+                                            className="text-red-600 hover:text-red-700 px-3 py-1 rounded-md text-sm font-medium border border-red-200 hover:border-red-300 flex items-center space-x-1"
                                         >
-                                            Admin
+                                            <Shield className="h-4 w-4" />
+                                            <span>Admin</span>
                                         </Link>
                                     )}
                                     <Link
@@ -152,6 +162,15 @@ export function Navigation() {
                             </div>
                         ) : user ? (
                             <>
+                                {user.role === "ADMIN" && (
+                                    <Link
+                                        href="/admin"
+                                        className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border-l-4 border-red-300"
+                                    >
+                                        <Shield className="h-5 w-5" />
+                                        <span>Admin Dashboard</span>
+                                    </Link>
+                                )}
                                 <Link
                                     href="/dashboard"
                                     className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"

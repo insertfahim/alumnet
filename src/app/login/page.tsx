@@ -11,7 +11,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -22,7 +22,26 @@ export default function LoginPage() {
         try {
             const success = await login(email, password);
             if (success) {
-                router.push("/dashboard");
+                // Get user data to check role and redirect accordingly
+                const response = await fetch("/api/auth/me", {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    if (userData.role === "ADMIN") {
+                        router.push("/admin");
+                    } else {
+                        router.push("/dashboard");
+                    }
+                } else {
+                    // Fallback to dashboard if user data fetch fails
+                    router.push("/dashboard");
+                }
             } else {
                 setError("Invalid email or password");
             }

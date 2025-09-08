@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Navigation } from "@/components/layout/Navigation";
 import { Footer } from "@/components/layout/Footer";
 
@@ -20,13 +21,15 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                <AuthProvider>
-                    <div className="min-h-screen flex flex-col">
-                        <Navigation />
-                        <main className="flex-1">{children}</main>
-                        <Footer />
-                    </div>
-                </AuthProvider>
+                <QueryProvider>
+                    <AuthProvider>
+                        <div className="min-h-screen flex flex-col">
+                            <Navigation />
+                            <main className="flex-1">{children}</main>
+                            <Footer />
+                        </div>
+                    </AuthProvider>
+                </QueryProvider>
             </body>
         </html>
     );

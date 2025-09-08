@@ -51,10 +51,16 @@ export function Hero() {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         {user ? (
                             <Link
-                                href="/dashboard"
+                                href={
+                                    user.role === "ADMIN"
+                                        ? "/admin"
+                                        : "/dashboard"
+                                }
                                 className="inline-flex items-center px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                                Go to Dashboard
+                                {user.role === "ADMIN"
+                                    ? "Go to Admin Panel"
+                                    : "Go to Dashboard"}
                                 <ArrowRight className="ml-2 h-5 w-5" />
                             </Link>
                         ) : (

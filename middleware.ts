@@ -99,11 +99,41 @@ export async function middleware(request: NextRequest) {
                 }
             }
 
-            // If authenticated user tries to access auth routes, redirect to dashboard
+            // If authenticated user tries to access auth routes, redirect based on role
             if (isAuthRoute) {
-                return NextResponse.redirect(
-                    new URL("/dashboard", request.url)
-                );
+                try {
+                    const userResponse = await fetch(
+                        `${request.nextUrl.origin}/api/auth/me`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        }
+                    );
+
+                    if (userResponse.ok) {
+                        const user = await userResponse.json();
+                        if (user.role === "ADMIN") {
+                            return NextResponse.redirect(
+                                new URL("/admin", request.url)
+                            );
+                        } else {
+                            return NextResponse.redirect(
+                                new URL("/dashboard", request.url)
+                            );
+                        }
+                    } else {
+                        // If we can't get user data, default to dashboard
+                        return NextResponse.redirect(
+                            new URL("/dashboard", request.url)
+                        );
+                    }
+                } catch (error) {
+                    console.error("Error getting user data:", error);
+                    return NextResponse.redirect(
+                        new URL("/dashboard", request.url)
+                    );
+                }
             }
         } catch (error) {
             console.error("Token verification error:", error);

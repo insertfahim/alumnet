@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, Upload, X, User } from "lucide-react";
 
 interface ProfilePictureUploadProps {
@@ -20,7 +20,20 @@ export default function ProfilePictureUpload({
     const [isDragOver, setIsDragOver] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileSelect = (file: File) => {
+    // Clear preview when upload is complete and currentPicture is updated
+    useEffect(() => {
+        if (!isUploading && currentPicture && previewUrl) {
+            // Small delay to ensure UI updates smoothly
+            setTimeout(() => {
+                setPreviewUrl(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+            }, 500);
+        }
+    }, [isUploading, currentPicture, previewUrl]);
+
+    const handleFileSelect = async (file: File) => {
         if (file && file.type.startsWith("image/")) {
             // Validate file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
@@ -36,25 +49,36 @@ export default function ProfilePictureUpload({
             reader.readAsDataURL(file);
 
             // Upload the file
-            onUpload(file);
+            try {
+                await onUpload(file);
+            } catch (error) {
+                console.error("Upload failed:", error);
+                // Clear preview on upload failure
+                setPreviewUrl(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+            }
         } else {
             alert("Please select a valid image file");
         }
     };
 
-    const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileInputChange = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
         const file = e.target.files?.[0];
         if (file) {
-            handleFileSelect(file);
+            await handleFileSelect(file);
         }
     };
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleDrop = async (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragOver(false);
         const file = e.dataTransfer.files[0];
         if (file) {
-            handleFileSelect(file);
+            await handleFileSelect(file);
         }
     };
 
