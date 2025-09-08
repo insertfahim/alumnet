@@ -10,118 +10,17 @@ import {
     GraduationCap,
     UserPlus,
     MessageCircle,
+    Loader2,
 } from "lucide-react";
 import { User } from "@/types";
 
-// Mock data for demonstration
-const mockAlumni: User[] = [
-    {
-        id: "1",
-        email: "fahima.rahman@email.com",
-        firstName: "Fahima",
-        lastName: "Rahman",
-        graduationYear: 2020,
-        degree: "Bachelor's",
-        major: "Computer Science and Engineering",
-        currentCompany: "Samsung R&D Institute Bangladesh",
-        currentPosition: "Software Engineer",
-        location: "Dhaka, Bangladesh",
-        bio: "BRACU CSE graduate passionate about mobile app development and AI. Currently working on innovative tech solutions in Bangladesh.",
-        isVerified: true,
-        role: "ALUMNI",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-    {
-        id: "2",
-        email: "rafiq.ahmed@email.com",
-        firstName: "Rafiq",
-        lastName: "Ahmed",
-        graduationYear: 2018,
-        degree: "Master's",
-        major: "Business Administration",
-        currentCompany: "BRAC Bank Limited",
-        currentPosition: "Assistant Vice President",
-        location: "Dhaka, Bangladesh",
-        bio: "BRAC Business School graduate with expertise in financial services and digital banking solutions.",
-        isVerified: true,
-        role: "ALUMNI",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-    {
-        id: "3",
-        email: "sadia.akter@email.com",
-        firstName: "Sadia",
-        lastName: "Akter",
-        graduationYear: 2019,
-        degree: "Master's",
-        major: "Public Health",
-        currentCompany: "World Health Organization",
-        currentPosition: "Public Health Consultant",
-        location: "Geneva, Switzerland",
-        bio: "BRACU JPGSPH graduate working on global health initiatives. Specializing in epidemiology and health policy.",
-        isVerified: true,
-        role: "ALUMNI",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-    {
-        id: "4",
-        email: "arif.hassan@email.com",
-        firstName: "Arif",
-        lastName: "Hassan",
-        graduationYear: 2017,
-        degree: "Bachelor's",
-        major: "Architecture",
-        currentCompany: "Shatotto Architecture",
-        currentPosition: "Senior Architect",
-        location: "Dhaka, Bangladesh",
-        bio: "BRACU School of Architecture graduate passionate about sustainable design and urban planning in Bangladesh.",
-        isVerified: true,
-        role: "ALUMNI",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-    {
-        id: "5",
-        email: "maria.islam@email.com",
-        firstName: "Maria",
-        lastName: "Islam",
-        graduationYear: 2021,
-        degree: "Bachelor's",
-        major: "English and Humanities",
-        currentCompany: "The Daily Star",
-        currentPosition: "Staff Reporter",
-        location: "Dhaka, Bangladesh",
-        bio: "BRACU English graduate working in journalism. Covering social issues and development stories in Bangladesh.",
-        isVerified: true,
-        role: "ALUMNI",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-    {
-        id: "6",
-        email: "nazmus.sakib@email.com",
-        firstName: "Nazmus",
-        lastName: "Sakib",
-        graduationYear: 2016,
-        degree: "Bachelor's",
-        major: "Electrical and Electronic Engineering",
-        currentCompany: "Grameenphone Ltd",
-        currentPosition: "Network Engineer",
-        location: "Dhaka, Bangladesh",
-        bio: "BRACU EEE graduate specializing in telecommunications and network infrastructure in Bangladesh.",
-        isVerified: true,
-        role: "ALUMNI",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    },
-];
+// Remove mock data - will fetch from API instead
 
 export default function DirectoryPage() {
-    const [alumni, setAlumni] = useState<User[]>(mockAlumni);
-    const [filteredAlumni, setFilteredAlumni] = useState<User[]>(mockAlumni);
+    const [alumni, setAlumni] = useState<User[]>([]);
+    const [filteredAlumni, setFilteredAlumni] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [filters, setFilters] = useState({
         graduationYear: "",
@@ -131,11 +30,53 @@ export default function DirectoryPage() {
     });
     const [showFilters, setShowFilters] = useState(false);
 
+    // Fetch alumni data from API
+    useEffect(() => {
+        fetchAlumni();
+    }, []);
+
+    // Filter alumni when search term or filters change
     useEffect(() => {
         filterAlumni();
-    }, [searchTerm, filters]);
+    }, [searchTerm, filters, alumni]);
+
+    const fetchAlumni = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const queryParams = new URLSearchParams();
+            if (searchTerm) queryParams.append("search", searchTerm);
+            if (filters.graduationYear)
+                queryParams.append("graduationYear", filters.graduationYear);
+            if (filters.major) queryParams.append("major", filters.major);
+            if (filters.location)
+                queryParams.append("location", filters.location);
+            if (filters.company) queryParams.append("company", filters.company);
+
+            const response = await fetch(
+                `/api/alumni?${queryParams.toString()}`
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch alumni data");
+            }
+
+            const data = await response.json();
+            setAlumni(data);
+        } catch (err) {
+            console.error("Error fetching alumni:", err);
+            setError(
+                err instanceof Error ? err.message : "Failed to load alumni"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filterAlumni = () => {
+        if (!alumni.length) return;
+
         let filtered = alumni;
 
         // Text search
@@ -371,95 +312,152 @@ export default function DirectoryPage() {
 
             {/* Results */}
             <div className="mb-4 flex justify-between items-center">
-                <p className="text-gray-600">
-                    Showing {filteredAlumni.length} of {alumni.length} alumni
-                </p>
+                {loading ? (
+                    <div className="flex items-center text-gray-600">
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Loading alumni...
+                    </div>
+                ) : error ? (
+                    <p className="text-red-600">{error}</p>
+                ) : (
+                    <p className="text-gray-600">
+                        Showing {filteredAlumni.length} of {alumni.length}{" "}
+                        alumni
+                    </p>
+                )}
             </div>
 
             {/* Alumni Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAlumni.map((person) => (
-                    <div
-                        key={person.id}
-                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-                    >
-                        <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center">
-                                <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                                    <span className="text-primary-600 font-semibold text-lg">
-                                        {person.firstName[0]}
-                                        {person.lastName[0]}
-                                    </span>
-                                </div>
-                                <div className="ml-3">
-                                    <div className="flex items-center space-x-2">
-                                        <h3 className="text-lg font-semibold text-gray-900">
-                                            {person.firstName} {person.lastName}
-                                        </h3>
-                                        <VerifiedBadge
-                                            isVerified={person.isVerified}
-                                            size="sm"
-                                        />
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse"
+                        >
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center">
+                                    <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                                    <div className="ml-3">
+                                        <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-24"></div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="space-y-2 mb-4">
-                            <div className="flex items-center text-sm text-gray-600">
-                                <GraduationCap className="w-4 h-4 mr-2 text-gray-400" />
-                                <span>
-                                    Class of {person.graduationYear} •{" "}
-                                    {person.major}
-                                </span>
+                            <div className="space-y-2 mb-4">
+                                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
                             </div>
-
-                            {person.currentPosition &&
-                                person.currentCompany && (
-                                    <div className="flex items-center text-sm text-gray-600">
-                                        <Building className="w-4 h-4 mr-2 text-gray-400" />
-                                        <span>
-                                            {person.currentPosition} at{" "}
-                                            {person.currentCompany}
+                            <div className="h-3 bg-gray-200 rounded w-full mb-4"></div>
+                            <div className="flex space-x-2">
+                                <div className="flex-1 h-8 bg-gray-200 rounded"></div>
+                                <div className="flex-1 h-8 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : error ? (
+                <div className="text-center py-12">
+                    <div className="text-red-500 mb-4">
+                        <Search className="h-16 w-16 mx-auto" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Error loading alumni
+                    </h3>
+                    <p className="text-gray-600 mb-4">{error}</p>
+                    <button
+                        onClick={fetchAlumni}
+                        className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredAlumni.map((person) => (
+                        <div
+                            key={person.id}
+                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                        >
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center">
+                                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                                        <span className="text-primary-600 font-semibold text-lg">
+                                            {person.firstName[0]}
+                                            {person.lastName[0]}
                                         </span>
                                     </div>
-                                )}
-
-                            {person.location && (
-                                <div className="flex items-center text-sm text-gray-600">
-                                    <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                                    <span>{person.location}</span>
+                                    <div className="ml-3">
+                                        <div className="flex items-center space-x-2">
+                                            <h3 className="text-lg font-semibold text-gray-900">
+                                                {person.firstName}{" "}
+                                                {person.lastName}
+                                            </h3>
+                                            <VerifiedBadge
+                                                isVerified={person.isVerified}
+                                                size="sm"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <div className="space-y-2 mb-4">
+                                <div className="flex items-center text-sm text-gray-600">
+                                    <GraduationCap className="w-4 h-4 mr-2 text-gray-400" />
+                                    <span>
+                                        Class of {person.graduationYear} •{" "}
+                                        {person.major}
+                                    </span>
+                                </div>
+
+                                {person.currentPosition &&
+                                    person.currentCompany && (
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Building className="w-4 h-4 mr-2 text-gray-400" />
+                                            <span>
+                                                {person.currentPosition} at{" "}
+                                                {person.currentCompany}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                {person.location && (
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                                        <span>{person.location}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {person.bio && (
+                                <p className="text-sm text-gray-700 mb-4 line-clamp-2">
+                                    {person.bio}
+                                </p>
                             )}
+
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={() => handleConnect(person.id)}
+                                    className="flex-1 flex items-center justify-center px-3 py-2 border border-primary-600 text-primary-600 rounded-md text-sm font-medium hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                >
+                                    <UserPlus className="w-4 h-4 mr-1" />
+                                    Connect
+                                </button>
+                                <button
+                                    onClick={() => handleMessage(person.id)}
+                                    className="flex-1 flex items-center justify-center px-3 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                >
+                                    <MessageCircle className="w-4 h-4 mr-1" />
+                                    Message
+                                </button>
+                            </div>
                         </div>
+                    ))}
+                </div>
+            )}
 
-                        {person.bio && (
-                            <p className="text-sm text-gray-700 mb-4 line-clamp-2">
-                                {person.bio}
-                            </p>
-                        )}
-
-                        <div className="flex space-x-2">
-                            <button
-                                onClick={() => handleConnect(person.id)}
-                                className="flex-1 flex items-center justify-center px-3 py-2 border border-primary-600 text-primary-600 rounded-md text-sm font-medium hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                            >
-                                <UserPlus className="w-4 h-4 mr-1" />
-                                Connect
-                            </button>
-                            <button
-                                onClick={() => handleMessage(person.id)}
-                                className="flex-1 flex items-center justify-center px-3 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                            >
-                                <MessageCircle className="w-4 h-4 mr-1" />
-                                Message
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {filteredAlumni.length === 0 && (
+            {!loading && !error && filteredAlumni.length === 0 && (
                 <div className="text-center py-12">
                     <div className="text-gray-500 mb-4">
                         <Search className="h-16 w-16 mx-auto" />
