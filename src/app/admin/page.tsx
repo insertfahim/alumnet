@@ -11,6 +11,17 @@ import ContentModeration from "@/components/admin/ContentModeration";
 import EventManagement from "@/components/admin/EventManagement";
 import SystemSettings from "@/components/admin/SystemSettings";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import {
     Users,
     Shield,
@@ -25,6 +36,9 @@ import {
     MessageSquare,
     Calendar,
     Key,
+    Plus,
+    Save,
+    X,
 } from "lucide-react";
 
 interface UnverifiedUser {
@@ -56,6 +70,17 @@ export default function AdminDashboard() {
         totalDonations: 0,
     });
 
+    // Donation form state
+    const [showDonationForm, setShowDonationForm] = useState(false);
+    const [donationFormData, setDonationFormData] = useState({
+        title: "",
+        description: "",
+        goalAmount: "",
+        endDate: "",
+        coverImage: "",
+    });
+    const [submittingDonation, setSubmittingDonation] = useState(false);
+
     useEffect(() => {
         if (authLoading) return; // Wait for auth check to complete
 
@@ -64,11 +89,10 @@ export default function AdminDashboard() {
             return;
         }
 
-        // Temporarily disabled for testing
-        // if (user.role !== "ADMIN") {
-        //     router.push("/");
-        //     return;
-        // }
+        if (user.role !== "ADMIN") {
+            router.push("/");
+            return;
+        }
 
         fetchData();
     }, [user, authLoading, router]);
@@ -180,6 +204,68 @@ export default function AdminDashboard() {
             setResetMessage("Network error. Please try again.");
         } finally {
             setResetLoading(false);
+        }
+    };
+
+    const handleDonationSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (
+            !donationFormData.title.trim() ||
+            !donationFormData.description.trim() ||
+            !donationFormData.goalAmount
+        ) {
+            alert("Please fill in all required fields");
+            return;
+        }
+
+        setSubmittingDonation(true);
+
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch("/api/campaigns", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    title: donationFormData.title,
+                    description: donationFormData.description,
+                    goalAmountCents: Math.round(
+                        parseFloat(donationFormData.goalAmount) * 100
+                    ),
+                    endDate: donationFormData.endDate || null,
+                    coverImage: donationFormData.coverImage || null,
+                    status: "APPROVED", // Admin can directly approve
+                }),
+            });
+
+            if (response.ok) {
+                alert(
+                    "Donation campaign created successfully! It will be visible to all users."
+                );
+                setShowDonationForm(false);
+                setDonationFormData({
+                    title: "",
+                    description: "",
+                    goalAmount: "",
+                    endDate: "",
+                    coverImage: "",
+                });
+            } else {
+                const error = await response.json();
+                alert(
+                    `Failed to create campaign: ${
+                        error.error || "Unknown error"
+                    }`
+                );
+            }
+        } catch (error) {
+            console.error("Error creating campaign:", error);
+            alert("Failed to create campaign. Please try again.");
+        } finally {
+            setSubmittingDonation(false);
         }
     };
 
@@ -316,28 +402,6 @@ export default function AdminDashboard() {
                         >
                             <BarChart3 className="w-4 h-4 inline mr-2" />
                             Analytics
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("newsletter")}
-                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                                activeTab === "newsletter"
-                                    ? "border-primary-500 text-primary-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                            }`}
-                        >
-                            <Mail className="w-4 h-4 inline mr-2" />
-                            Newsletter
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("content")}
-                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                                activeTab === "content"
-                                    ? "border-primary-500 text-primary-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                            }`}
-                        >
-                            <MessageSquare className="w-4 h-4 inline mr-2" />
-                            Content
                         </button>
                         <button
                             onClick={() => setActiveTab("events")}
@@ -544,22 +608,215 @@ export default function AdminDashboard() {
                     {activeTab === "events" && <EventManagement />}
 
                     {activeTab === "donations" && (
-                        <div className="text-center py-8">
-                            <DollarSign className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                            <h3 className="text-xl font-medium mb-2">
-                                Donations Management
-                            </h3>
-                            <p className="text-gray-600 mb-6">
-                                Manage fundraising campaigns and track
-                                donations.
-                            </p>
-                            <Button
-                                onClick={() =>
-                                    (window.location.href = "/admin/donations")
-                                }
-                            >
-                                Go to Donations Dashboard
-                            </Button>
+                        <div className="space-y-6">
+                            {!showDonationForm ? (
+                                <div className="text-center py-8">
+                                    <DollarSign className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                                    <h3 className="text-xl font-medium mb-2">
+                                        Donations Management
+                                    </h3>
+                                    <p className="text-gray-600 mb-6">
+                                        Create and manage fundraising campaigns
+                                        that all users can see and donate to.
+                                    </p>
+                                    <div className="flex gap-4 justify-center">
+                                        <Button
+                                            onClick={() =>
+                                                setShowDonationForm(true)
+                                            }
+                                            className="bg-primary-600 hover:bg-primary-700"
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Create Donation Post
+                                        </Button>
+                                        <Button
+                                            onClick={() =>
+                                                (window.location.href =
+                                                    "/admin/donations")
+                                            }
+                                            variant="outline"
+                                        >
+                                            View All Campaigns
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <Card className="max-w-2xl mx-auto">
+                                    <CardHeader>
+                                        <div className="flex justify-between items-center">
+                                            <CardTitle>
+                                                Create New Donation Campaign
+                                            </CardTitle>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setShowDonationForm(false)
+                                                }
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <form
+                                            onSubmit={handleDonationSubmit}
+                                            className="space-y-4"
+                                        >
+                                            <div>
+                                                <Label htmlFor="donation-title">
+                                                    Campaign Title *
+                                                </Label>
+                                                <Input
+                                                    id="donation-title"
+                                                    value={
+                                                        donationFormData.title
+                                                    }
+                                                    onChange={(e) =>
+                                                        setDonationFormData(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                title: e.target
+                                                                    .value,
+                                                            })
+                                                        )
+                                                    }
+                                                    placeholder="Enter campaign title"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="donation-description">
+                                                    Description *
+                                                </Label>
+                                                <Textarea
+                                                    id="donation-description"
+                                                    value={
+                                                        donationFormData.description
+                                                    }
+                                                    onChange={(e) =>
+                                                        setDonationFormData(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                description:
+                                                                    e.target
+                                                                        .value,
+                                                            })
+                                                        )
+                                                    }
+                                                    placeholder="Describe your fundraising campaign"
+                                                    rows={4}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="donation-goal">
+                                                    Goal Amount ($) *
+                                                </Label>
+                                                <Input
+                                                    id="donation-goal"
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={
+                                                        donationFormData.goalAmount
+                                                    }
+                                                    onChange={(e) =>
+                                                        setDonationFormData(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                goalAmount:
+                                                                    e.target
+                                                                        .value,
+                                                            })
+                                                        )
+                                                    }
+                                                    placeholder="1000.00"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="donation-end-date">
+                                                    End Date (Optional)
+                                                </Label>
+                                                <Input
+                                                    id="donation-end-date"
+                                                    type="date"
+                                                    value={
+                                                        donationFormData.endDate
+                                                    }
+                                                    onChange={(e) =>
+                                                        setDonationFormData(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                endDate:
+                                                                    e.target
+                                                                        .value,
+                                                            })
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="donation-image">
+                                                    Cover Image URL (Optional)
+                                                </Label>
+                                                <Input
+                                                    id="donation-image"
+                                                    value={
+                                                        donationFormData.coverImage
+                                                    }
+                                                    onChange={(e) =>
+                                                        setDonationFormData(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                coverImage:
+                                                                    e.target
+                                                                        .value,
+                                                            })
+                                                        )
+                                                    }
+                                                    placeholder="https://example.com/image.jpg"
+                                                />
+                                            </div>
+
+                                            <div className="flex gap-4 pt-4">
+                                                <Button
+                                                    type="submit"
+                                                    disabled={
+                                                        submittingDonation
+                                                    }
+                                                    className="bg-primary-600 hover:bg-primary-700"
+                                                >
+                                                    {submittingDonation ? (
+                                                        "Creating..."
+                                                    ) : (
+                                                        <>
+                                                            <Save className="w-4 h-4 mr-2" />
+                                                            Create Campaign
+                                                        </>
+                                                    )}
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        setShowDonationForm(
+                                                            false
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </form>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                     )}
 

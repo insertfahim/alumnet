@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useRouter } from "next/navigation";
 import CampaignProposalManager from "@/components/admin/CampaignProposalManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +49,8 @@ interface CampaignFormData {
 }
 
 export default function AdminDonationsPage() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
     const [campaigns, setCampaigns] = useState<FundraisingCampaign[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("campaigns");
@@ -64,10 +66,20 @@ export default function AdminDonationsPage() {
     });
 
     useEffect(() => {
-        if (user?.role === "ADMIN") {
-            fetchCampaigns();
+        if (authLoading) return; // Wait for auth check to complete
+
+        if (!user) {
+            router.push("/login");
+            return;
         }
-    }, [user]);
+
+        if (user.role !== "ADMIN") {
+            router.push("/");
+            return;
+        }
+
+        fetchCampaigns();
+    }, [user, authLoading, router]);
 
     const fetchCampaigns = async () => {
         try {
@@ -205,6 +217,35 @@ export default function AdminDonationsPage() {
     );
     const totalCampaigns = campaigns.length;
     const activeCampaigns = campaigns.filter((c) => c.isActive).length;
+
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!user || user.role !== "ADMIN") {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Card className="w-full max-w-md">
+                    <CardContent className="text-center py-12">
+                        <div className="text-6xl mb-4">🚫</div>
+                        <h3 className="text-xl font-medium mb-2">
+                            Access Denied
+                        </h3>
+                        <p className="text-gray-600">
+                            You don't have permission to access this page.
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">

@@ -185,8 +185,16 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Update campaign current amount if donation is for a campaign
-        if (donation.campaignId && donation.status === "COMPLETED") {
+        // For development with mock payments, automatically complete the donation
+        // and update campaign amount immediately
+        if (process.env.NODE_ENV === "development" && donation.campaignId) {
+            // Mark donation as completed
+            await prisma.donation.update({
+                where: { id: donation.id },
+                data: { status: "COMPLETED" },
+            });
+
+            // Update campaign current amount
             await prisma.fundraisingCampaign.update({
                 where: { id: donation.campaignId },
                 data: {
@@ -195,6 +203,22 @@ export async function POST(request: NextRequest) {
                     },
                 },
             });
+
+            console.log(
+                `Development mode: Auto-completed donation ${donation.id} and updated campaign ${donation.campaignId}`
+            );
+        } else {
+            // Update campaign current amount if donation is for a campaign and already completed
+            if (donation.campaignId && donation.status === "COMPLETED") {
+                await prisma.fundraisingCampaign.update({
+                    where: { id: donation.campaignId },
+                    data: {
+                        currentAmountCents: {
+                            increment: donation.amountCents,
+                        },
+                    },
+                });
+            }
         }
 
         return NextResponse.json(donation, { status: 201 });

@@ -75,7 +75,7 @@ async function createTestAlumniUser() {
         console.log("🔄 Creating test alumni user...");
 
         const email = "alumni@bracu.ac.bd";
-        const password = "admin123456"; // Change this to a secure password
+        const password = "alumni123456"; // Change this to a secure password
         const firstName = "Test";
         const lastName = "Alumni";
 
@@ -162,7 +162,7 @@ async function main() {
     console.log("");
     console.log("📝 Test Accounts Created:");
     console.log("   Admin: admin@bracu.ac.bd / admin123456");
-    console.log("   Alumni: alumni@bracu.ac.bd / admin123456");
+    console.log("   Alumni: alumni@bracu.ac.bd / alumni123456");
     console.log("");
     console.log("🚀 Next steps:");
     console.log("   1. Start the development server: npm run dev");

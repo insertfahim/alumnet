@@ -325,6 +325,28 @@ export default function DonationsPage() {
 
                     {/* Main Content */}
                     <div className="lg:w-3/4">
+                        {user && user.role !== "ADMIN" && (
+                            <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                                Have an Idea for a Campaign?
+                                            </h3>
+                                            <p className="text-gray-600">
+                                                Propose a new fundraising
+                                                campaign to support our
+                                                community initiatives.
+                                            </p>
+                                        </div>
+                                        <CampaignProposalForm
+                                            onSuccess={fetchCampaigns}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {loading ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {[...Array(4)].map((_, i) => (

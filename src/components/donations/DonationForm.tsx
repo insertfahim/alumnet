@@ -98,6 +98,35 @@ export function DonationForm({
             // Convert amount to cents
             const amountCents = Math.round(data.amount * 100);
 
+            // In development mode, skip Stripe and directly complete the donation
+            if (process.env.NODE_ENV === "development") {
+                // Create donation record
+                const response = await fetch("/api/donations", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        ...data,
+                        amountCents,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || "Failed to create donation");
+                }
+
+                const donation = await response.json();
+
+                toast.success(
+                    "Donation completed successfully! Thank you for your support."
+                );
+                onSuccess?.();
+                return;
+            }
+
+            // Production flow with Stripe
             // Create donation record
             const response = await fetch("/api/donations", {
                 method: "POST",
