@@ -370,7 +370,7 @@ export async function POST(request: NextRequest) {
                 description: description.trim(),
                 location: location.trim(),
                 virtual,
-                type: eventData.type || null,
+                ...(eventData.type && { type: eventData.type }),
                 startDate: start,
                 endDate: end,
                 maxAttendees: eventData.maxAttendees || null,
