@@ -95,7 +95,23 @@ export default function EventDetailsPage() {
             }
 
             const eventData = await response.json();
-            setEvent(eventData);
+            // API returns shape { event: {...} }
+            const e = eventData.event ?? eventData;
+            const normalized: EventDetails = {
+                ...e,
+                startDate: e?.startDate ? new Date(e.startDate) : e.startDate,
+                endDate: e?.endDate ? new Date(e.endDate) : e.endDate,
+                createdAt: e?.createdAt ? new Date(e.createdAt) : e.createdAt,
+                attendees: Array.isArray(e?.attendees)
+                    ? e.attendees.map((a: any) => ({
+                          ...a,
+                          createdAt: a?.createdAt
+                              ? new Date(a.createdAt).toISOString()
+                              : a?.createdAt,
+                      }))
+                    : e?.attendees,
+            };
+            setEvent(normalized);
         } catch (err) {
             console.error("Error fetching event details:", err);
             setError(

@@ -47,11 +47,34 @@ export default function ResetPasswordPage() {
                             <CheckCircle className="h-12 w-12 text-green-600" />
                         </div>
                         <h2 className="mt-6 text-3xl font-bold text-gray-900">
-                            Check your email
+                            Check your console
                         </h2>
                         <p className="mt-2 text-sm text-gray-600">
-                            We've sent a password reset link to {email}
+                            A password reset link has been logged to the server
+                            console for {email}
                         </p>
+                        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <CheckCircle className="h-5 w-5 text-blue-400" />
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-blue-800">
+                                        Development Mode
+                                    </h3>
+                                    <div className="mt-2 text-sm text-blue-700">
+                                        <p>
+                                            Since email service is not
+                                            configured, the reset link is
+                                            displayed in the server console.
+                                            Copy the link from your terminal and
+                                            paste it in your browser to complete
+                                            the password reset.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -59,14 +82,15 @@ export default function ResetPasswordPage() {
                     <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
                         <div className="text-center">
                             <p className="text-sm text-gray-600 mb-4">
-                                Didn't receive the email? Check your spam folder
-                                or try again.
+                                Didn't see the reset link in console? Make sure
+                                your development server is running and check the
+                                terminal output.
                             </p>
                             <button
                                 onClick={() => setSent(false)}
                                 className="text-primary-600 hover:text-primary-500 font-medium"
                             >
-                                Send another email
+                                Try again
                             </button>
                         </div>
 

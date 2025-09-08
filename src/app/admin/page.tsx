@@ -24,6 +24,7 @@ import {
     Activity,
     MessageSquare,
     Calendar,
+    Key,
 } from "lucide-react";
 
 interface UnverifiedUser {
@@ -44,6 +45,10 @@ export default function AdminDashboard() {
         []
     );
     const [loading, setLoading] = useState(true);
+    const [resetUserSearch, setResetUserSearch] = useState("");
+    const [resetUserResults, setResetUserResults] = useState<any[]>([]);
+    const [resetLoading, setResetLoading] = useState(false);
+    const [resetMessage, setResetMessage] = useState("");
     const [stats, setStats] = useState({
         totalUsers: 0,
         verifiedUsers: 0,
@@ -116,6 +121,65 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             console.error("Error verifying user:", error);
+        }
+    };
+
+    const searchUsers = async (query: string) => {
+        if (!query.trim()) {
+            setResetUserResults([]);
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/api/admin/users/search?q=${encodeURIComponent(query)}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                }
+            );
+
+            if (response.ok) {
+                const users = await response.json();
+                setResetUserResults(users);
+            }
+        } catch (error) {
+            console.error("Failed to search users:", error);
+        }
+    };
+
+    const handlePasswordReset = async (userId: string) => {
+        setResetLoading(true);
+        setResetMessage("");
+
+        try {
+            const response = await fetch("/api/admin/reset-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ userId }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setResetMessage(
+                    `Temporary password generated for ${data.user.name}. Check the server console for the password.`
+                );
+                setResetUserSearch("");
+                setResetUserResults([]);
+            } else {
+                setResetMessage(data.error || "Failed to reset password");
+            }
+        } catch (error) {
+            setResetMessage("Network error. Please try again.");
+        } finally {
+            setResetLoading(false);
         }
     };
 
@@ -232,6 +296,17 @@ export default function AdminDashboard() {
                             User Management
                         </button>
                         <button
+                            onClick={() => setActiveTab("password-reset")}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === "password-reset"
+                                    ? "border-primary-500 text-primary-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
+                            <Key className="w-4 h-4 inline mr-2" />
+                            Password Reset
+                        </button>
+                        <button
                             onClick={() => setActiveTab("analytics")}
                             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                                 activeTab === "analytics"
@@ -315,6 +390,150 @@ export default function AdminDashboard() {
                     {activeTab === "verifications" && <VerificationManager />}
 
                     {activeTab === "users" && <UserManagement />}
+
+                    {activeTab === "password-reset" && (
+                        <div className="space-y-6">
+                            <div className="text-center py-8">
+                                <Key className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                                <h3 className="text-xl font-medium mb-2">
+                                    Password Reset Management
+                                </h3>
+                                <p className="text-gray-600 mb-6">
+                                    Help users reset their passwords when they
+                                    can't access their email.
+                                </p>
+                            </div>
+
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                <h4 className="text-lg font-medium text-blue-900 mb-4">
+                                    How Password Reset Works
+                                </h4>
+                                <div className="space-y-3 text-sm text-blue-800">
+                                    <p>
+                                        <strong>1. User Request:</strong> Users
+                                        can request a password reset from the
+                                        login page.
+                                    </p>
+                                    <p>
+                                        <strong>2. Console Output:</strong>{" "}
+                                        Since email is not configured, reset
+                                        links are logged to the server console.
+                                    </p>
+                                    <p>
+                                        <strong>3. Admin Assistance:</strong> As
+                                        an admin, you can help users by:
+                                    </p>
+                                    <ul className="list-disc list-inside ml-4 space-y-1">
+                                        <li>
+                                            Checking the server console for
+                                            reset links
+                                        </li>
+                                        <li>
+                                            Sharing the reset link directly with
+                                            the user
+                                        </li>
+                                        <li>
+                                            Manually resetting passwords if
+                                            needed
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="bg-white border border-gray-200 rounded-lg p-6">
+                                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                                    Manual Password Reset
+                                </h4>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Search for a user and generate a temporary
+                                    password for them.
+                                </p>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label
+                                            htmlFor="user-search"
+                                            className="block text-sm font-medium text-gray-700 mb-2"
+                                        >
+                                            Search Users
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="user-search"
+                                            value={resetUserSearch}
+                                            onChange={(e) => {
+                                                setResetUserSearch(
+                                                    e.target.value
+                                                );
+                                                searchUsers(e.target.value);
+                                            }}
+                                            placeholder="Enter name or email..."
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        />
+                                    </div>
+
+                                    {resetUserResults.length > 0 && (
+                                        <div className="border border-gray-200 rounded-md max-h-60 overflow-y-auto">
+                                            {resetUserResults.map((user) => (
+                                                <div
+                                                    key={user.id}
+                                                    className="p-3 border-b border-gray-100 last:border-b-0 flex justify-between items-center"
+                                                >
+                                                    <div>
+                                                        <p className="font-medium text-gray-900">
+                                                            {user.firstName}{" "}
+                                                            {user.lastName}
+                                                        </p>
+                                                        <p className="text-sm text-gray-600">
+                                                            {user.email}
+                                                        </p>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() =>
+                                                            handlePasswordReset(
+                                                                user.id
+                                                            )
+                                                        }
+                                                        disabled={resetLoading}
+                                                        size="sm"
+                                                        className="bg-red-600 hover:bg-red-700"
+                                                    >
+                                                        {resetLoading
+                                                            ? "Resetting..."
+                                                            : "Reset Password"}
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {resetMessage && (
+                                        <div
+                                            className={`p-4 rounded-md ${
+                                                resetMessage.includes(
+                                                    "generated"
+                                                )
+                                                    ? "bg-green-50 border border-green-200"
+                                                    : "bg-red-50 border border-red-200"
+                                            }`}
+                                        >
+                                            <p
+                                                className={`text-sm ${
+                                                    resetMessage.includes(
+                                                        "generated"
+                                                    )
+                                                        ? "text-green-800"
+                                                        : "text-red-800"
+                                                }`}
+                                            >
+                                                {resetMessage}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {activeTab === "analytics" && <AnalyticsDashboard />}
 

@@ -82,7 +82,22 @@ export default function EventsPage() {
             }
 
             const data = await response.json();
-            setEvents(data.events || []);
+            // Normalize date fields from API (which are strings) into Date objects
+            const normalizedEvents = (data.events || []).map((e: any) => ({
+                ...e,
+                startDate: e?.startDate ? new Date(e.startDate) : e?.startDate,
+                endDate: e?.endDate ? new Date(e.endDate) : e?.endDate,
+                createdAt: e?.createdAt ? new Date(e.createdAt) : e?.createdAt,
+                attendees: Array.isArray(e?.attendees)
+                    ? e.attendees.map((a: any) => ({
+                          ...a,
+                          registeredAt: a?.registeredAt
+                              ? new Date(a.registeredAt)
+                              : a?.registeredAt,
+                      }))
+                    : e?.attendees,
+            }));
+            setEvents(normalizedEvents || []);
             setTotalPages(data.pagination?.totalPages || 1);
 
             // Fetch RSVP statuses for all events
@@ -631,7 +646,10 @@ export default function EventsPage() {
                                                                     day: "numeric",
                                                                 }
                                                             ).format(
-                                                                event.startDate
+                                                                // Ensure valid Date instance for formatting
+                                                                new Date(
+                                                                    event.startDate as any
+                                                                )
                                                             )}
                                                         </p>
                                                         <p className="text-sm">
@@ -643,7 +661,9 @@ export default function EventsPage() {
                                                                     hour12: true,
                                                                 }
                                                             ).format(
-                                                                event.startDate
+                                                                new Date(
+                                                                    event.startDate as any
+                                                                )
                                                             )}{" "}
                                                             -{" "}
                                                             {new Intl.DateTimeFormat(
@@ -654,7 +674,9 @@ export default function EventsPage() {
                                                                     hour12: true,
                                                                 }
                                                             ).format(
-                                                                event.endDate
+                                                                new Date(
+                                                                    event.endDate as any
+                                                                )
                                                             )}
                                                         </p>
                                                     </div>

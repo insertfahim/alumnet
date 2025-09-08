@@ -48,6 +48,22 @@ export async function POST(request: NextRequest) {
 
         // Send reset email
         const resetLink = `${env.APP_URL}/auth/reset-password?token=${token}`;
+
+        // For development/demo purposes, log the reset link to console instead of sending email
+        console.log("🔐 PASSWORD RESET REQUEST");
+        console.log("=========================");
+        console.log(`User: ${user.firstName} (${user.email})`);
+        console.log(`Reset Link: ${resetLink}`);
+        console.log(`Token: ${token}`);
+        console.log(`Expires: ${expiresAt.toISOString()}`);
+        console.log("=========================");
+        console.log(
+            "Copy the reset link above and paste it in your browser to reset the password"
+        );
+        console.log("");
+
+        // Uncomment the lines below when you have email service configured:
+        /*
         const emailTemplate = emailTemplates.passwordReset(
             resetLink,
             user.firstName
@@ -63,6 +79,7 @@ export async function POST(request: NextRequest) {
         if (!emailSent) {
             console.error("Failed to send password reset email");
         }
+        */
 
         return NextResponse.json({
             success: true,
