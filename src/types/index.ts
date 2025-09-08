@@ -204,3 +204,82 @@ export interface Feedback {
     isPublic: boolean;
     createdAt: Date;
 }
+
+// Donation types
+export interface FundraisingCampaign {
+    id: string;
+    title: string;
+    description: string;
+    goalAmountCents: number;
+    currentAmountCents: number;
+    currency: string;
+    startDate: Date;
+    endDate?: Date;
+    isActive: boolean;
+    coverImage?: string;
+    organizerId: string;
+    organizer: User;
+    donations: Donation[];
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface Donation {
+    id: string;
+    userId?: string;
+    user?: User;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    amountCents: number;
+    currency: string;
+    recurring: boolean;
+    stripePaymentIntentId?: string;
+    stripeSubscriptionId?: string;
+    status: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED";
+    message?: string;
+    isAnonymous: boolean;
+    campaignId?: string;
+    campaign?: FundraisingCampaign;
+    createdAt: Date;
+    updatedAt: Date;
+    receipts: Receipt[];
+}
+
+export interface Receipt {
+    id: string;
+    donationId: string;
+    donation: Donation;
+    pdfKey: string;
+    receiptNum: string;
+    issuedAt: Date;
+}
+
+export interface DonationFormData {
+    amount: number;
+    currency: string;
+    recurring: boolean;
+    frequency?: "monthly" | "quarterly" | "yearly";
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    message?: string;
+    isAnonymous: boolean;
+    campaignId?: string;
+}
+
+export interface DonationStats {
+    totalRaised: number;
+    totalDonations: number;
+    averageDonation: number;
+    recurringDonations: number;
+    topDonors: Array<{
+        name: string;
+        amount: number;
+        isAnonymous: boolean;
+    }>;
+    monthlyProgress: Array<{
+        month: string;
+        amount: number;
+    }>;
+}

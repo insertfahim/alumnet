@@ -160,6 +160,12 @@ export function Navigation() {
                                     >
                                         Connections
                                     </Link>
+                                    <Link
+                                        href="/donations"
+                                        className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
+                                    >
+                                        Donations
+                                    </Link>
                                 </>
                             )}
                         </div>
@@ -293,6 +299,12 @@ export function Navigation() {
                                     className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                                 >
                                     Connections
+                                </Link>
+                                <Link
+                                    href="/donations"
+                                    className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                >
+                                    Donations
                                 </Link>
                                 <button
                                     onClick={logout}

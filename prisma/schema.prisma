@@ -59,6 +59,7 @@ model User {
   sessionFeedback     Feedback[]
   newsletterPref      NewsletterPref?
   donations           Donation[]
+  fundraisingCampaigns FundraisingCampaign[]
   messageThreads      MessageThread[] @relation("ThreadParticipants")
   sends               Send[]
 
@@ -500,6 +501,30 @@ model OpenEvent {
   @@map("open_events")
 }
 
+// Fundraising campaigns
+model FundraisingCampaign {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String
+  goalAmountCents    Int
+  currentAmountCents Int      @default(0)
+  currency           String   @default("USD")
+  startDate          DateTime @default(now())
+  endDate            DateTime?
+  isActive           Boolean  @default(true)
+  coverImage         String?
+  organizerId        String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organizer User      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  donations Donation[]
+
+  @@index([organizerId, isActive])
+  @@index([startDate, endDate])
+  @@map("fundraising_campaigns")
+}
+
 // Donations system
 model Donation {
   id                    String   @id @default(cuid())
@@ -515,12 +540,17 @@ model Donation {
   status                DonationStatus @default(PENDING)
   message               String?
   isAnonymous           Boolean  @default(false)
+  campaignId            String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user     User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  campaign FundraisingCampaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   receipts Receipt[]
 
+  @@index([userId, status])
+  @@index([campaignId, status])
+  @@index([status, createdAt])
   @@map("donations")
 }
 

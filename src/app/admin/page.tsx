@@ -10,6 +10,7 @@ import NewsletterManagement from "@/components/admin/NewsletterManagement";
 import ContentModeration from "@/components/admin/ContentModeration";
 import EventManagement from "@/components/admin/EventManagement";
 import SystemSettings from "@/components/admin/SystemSettings";
+import { Button } from "@/components/ui/button";
 import {
     Users,
     Shield,
@@ -275,6 +276,17 @@ export default function AdminDashboard() {
                             Events
                         </button>
                         <button
+                            onClick={() => setActiveTab("donations")}
+                            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === "donations"
+                                    ? "border-primary-500 text-primary-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            }`}
+                        >
+                            <DollarSign className="w-4 h-4 inline mr-2" />
+                            Donations
+                        </button>
+                        <button
                             onClick={() => setActiveTab("system")}
                             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
                                 activeTab === "system"
@@ -311,6 +323,24 @@ export default function AdminDashboard() {
                     {activeTab === "content" && <ContentModeration />}
 
                     {activeTab === "events" && <EventManagement />}
+
+                    {activeTab === "donations" && (
+                        <div className="text-center py-8">
+                            <DollarSign className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                            <h3 className="text-xl font-medium mb-2">
+                                Donations Management
+                            </h3>
+                            <p className="text-gray-600 mb-6">
+                                Manage fundraising campaigns and track
+                                donations.
+                            </p>
+                            <Button asChild>
+                                <a href="/admin/donations">
+                                    Go to Donations Dashboard
+                                </a>
+                            </Button>
+                        </div>
+                    )}
 
                     {activeTab === "system" && <SystemSettings />}
 
