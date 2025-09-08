@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { clsx } from "clsx";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-    variant?: "default" | "secondary" | "outline";
+    variant?: "default" | "secondary" | "outline" | "destructive";
 }
 
 export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
@@ -19,6 +19,8 @@ export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
                             variant === "secondary",
                         "border-gray-300 text-gray-700 hover:bg-gray-50":
                             variant === "outline",
+                        "border-transparent bg-red-600 text-white hover:bg-red-700":
+                            variant === "destructive",
                     },
                     className
                 )}

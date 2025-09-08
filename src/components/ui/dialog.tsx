@@ -29,10 +29,14 @@ const Dialog = ({ open = false, onOpenChange, children }: DialogProps) => {
 
 const DialogTrigger = ({
     children,
+    asChild = false,
     ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-    <button {...props}>{children}</button>
-);
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }) => {
+    if (asChild) {
+        return <>{children}</>;
+    }
+    return <button {...props}>{children}</button>;
+};
 
 const DialogPortal = ({ children }: { children: React.ReactNode }) => children;
 

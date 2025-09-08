@@ -130,9 +130,9 @@ export default function DonationDashboard() {
                         <p className="text-gray-600 mb-6">
                             Please sign in to view your donation history.
                         </p>
-                        <Button asChild>
-                            <Link href="/login">Sign In</Link>
-                        </Button>
+                        <Link href="/login">
+                            <Button>Sign In</Button>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>
@@ -157,9 +157,9 @@ export default function DonationDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <Card>
                         <CardContent className="p-6">
-                            <div className="flex items-center">
+                            <div className="flex flex-col items-center text-center">
                                 <TrendingUp className="h-8 w-8 text-green-600" />
-                                <div className="ml-4">
+                                <div className="mt-2">
                                     <p className="text-sm font-medium text-gray-600">
                                         Total Donated
                                     </p>
@@ -173,9 +173,9 @@ export default function DonationDashboard() {
 
                     <Card>
                         <CardContent className="p-6">
-                            <div className="flex items-center">
+                            <div className="flex flex-col items-center text-center">
                                 <Heart className="h-8 w-8 text-red-600" />
-                                <div className="ml-4">
+                                <div className="mt-2">
                                     <p className="text-sm font-medium text-gray-600">
                                         Total Donations
                                     </p>
@@ -189,9 +189,9 @@ export default function DonationDashboard() {
 
                     <Card>
                         <CardContent className="p-6">
-                            <div className="flex items-center">
+                            <div className="flex flex-col items-center text-center">
                                 <CreditCard className="h-8 w-8 text-blue-600" />
-                                <div className="ml-4">
+                                <div className="mt-2">
                                     <p className="text-sm font-medium text-gray-600">
                                         Recurring
                                     </p>
@@ -205,9 +205,9 @@ export default function DonationDashboard() {
 
                     <Card>
                         <CardContent className="p-6">
-                            <div className="flex items-center">
+                            <div className="flex flex-col items-center text-center">
                                 <Receipt className="h-8 w-8 text-purple-600" />
-                                <div className="ml-4">
+                                <div className="mt-2">
                                     <p className="text-sm font-medium text-gray-600">
                                         Tax Receipts
                                     </p>
@@ -229,12 +229,12 @@ export default function DonationDashboard() {
                     <CardHeader>
                         <div className="flex justify-between items-center">
                             <CardTitle>Donation History</CardTitle>
-                            <Button asChild>
-                                <Link href="/donations">
+                            <Link href="/donations">
+                                <Button>
                                     <Heart className="h-4 w-4 mr-2" />
                                     Make Another Donation
-                                </Link>
-                            </Button>
+                                </Button>
+                            </Link>
                         </div>
                     </CardHeader>
 
@@ -278,11 +278,9 @@ export default function DonationDashboard() {
                                             Every contribution makes a
                                             difference!
                                         </p>
-                                        <Button asChild>
-                                            <Link href="/donations">
-                                                Start Donating
-                                            </Link>
-                                        </Button>
+                                        <Link href="/donations">
+                                            <Button>Start Donating</Button>
+                                        </Link>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">

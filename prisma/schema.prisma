@@ -60,6 +60,7 @@ model User {
   newsletterPref      NewsletterPref?
   donations           Donation[]
   fundraisingCampaigns FundraisingCampaign[]
+  approvedCampaigns   FundraisingCampaign[] @relation("CampaignApprover")
   messageThreads      MessageThread[] @relation("ThreadParticipants")
   sends               Send[]
 
@@ -466,7 +467,7 @@ model Campaign {
   category    String   @default("general")
   scheduledAt DateTime?
   sentAt      DateTime?
-  status      CampaignStatus @default(DRAFT)
+  status      NewsletterCampaignStatus @default(DRAFT)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -504,25 +505,31 @@ model OpenEvent {
 
 // Fundraising campaigns
 model FundraisingCampaign {
-  id                 String   @id @default(cuid())
+  id                 String            @id @default(cuid())
   title              String
   description        String
   goalAmountCents    Int
-  currentAmountCents Int      @default(0)
-  currency           String   @default("USD")
-  startDate          DateTime @default(now())
+  currentAmountCents Int               @default(0)
+  currency           String            @default("USD")
+  startDate          DateTime          @default(now())
   endDate            DateTime?
-  isActive           Boolean  @default(true)
+  isActive           Boolean           @default(true)
   coverImage         String?
   organizerId        String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  status             FundraisingCampaignStatus    @default(DRAFT)
+  rejectionReason    String?
+  approvedAt         DateTime?
+  approvedBy         String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   organizer User      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  approver  User?     @relation(name: "CampaignApprover", fields: [approvedBy], references: [id])
   donations Donation[]
 
   @@index([organizerId, isActive])
   @@index([startDate, endDate])
+  @@index([status])
   @@map("fundraising_campaigns")
 }
 
@@ -652,7 +659,7 @@ enum NewsletterFrequency {
   MONTHLY
 }
 
-enum CampaignStatus {
+enum NewsletterCampaignStatus {
   DRAFT
   SCHEDULED
   SENDING
@@ -673,6 +680,13 @@ enum DonationStatus {
   FAILED
   CANCELLED
   REFUNDED
+}
+
+enum FundraisingCampaignStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum VerificationStatus {

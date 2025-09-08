@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import CampaignProposalManager from "@/components/admin/CampaignProposalManager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Dialog,
     DialogContent,
@@ -32,6 +34,7 @@ import {
     DollarSign,
     Calendar,
     Eye,
+    FileText,
 } from "lucide-react";
 import { FundraisingCampaign } from "@/types";
 import toast from "react-hot-toast";
@@ -48,6 +51,7 @@ export default function AdminDonationsPage() {
     const { user } = useAuth();
     const [campaigns, setCampaigns] = useState<FundraisingCampaign[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("campaigns");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingCampaign, setEditingCampaign] =
         useState<FundraisingCampaign | null>(null);
@@ -209,350 +213,402 @@ export default function AdminDonationsPage() {
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">
-                            Fundraising Campaigns
+                            Donations Management
                         </h1>
                         <p className="text-gray-600 mt-2">
-                            Manage and track all fundraising campaigns
+                            Manage campaign proposals and track fundraising
+                            campaigns
                         </p>
                     </div>
+                </div>
 
-                    <Dialog
-                        open={isCreateDialogOpen}
-                        onOpenChange={setIsCreateDialogOpen}
-                    >
-                        <DialogTrigger>
-                            <Button
-                                onClick={() => {
-                                    setEditingCampaign(null);
-                                    resetForm();
-                                }}
+                {/* Main Tabs */}
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="mb-8">
+                        <TabsTrigger
+                            value="campaigns"
+                            className="flex items-center gap-2"
+                        >
+                            <DollarSign className="h-4 w-4" />
+                            Live Campaigns
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="proposals"
+                            className="flex items-center gap-2"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Campaign Proposals
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="proposals">
+                        <CampaignProposalManager />
+                    </TabsContent>
+
+                    <TabsContent value="campaigns">
+                        {/* Existing campaign management content */}
+                        <div className="flex justify-between items-center mb-8">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">
+                                    Active Campaigns
+                                </h2>
+                                <p className="text-gray-600 mt-2">
+                                    Manage live fundraising campaigns
+                                </p>
+                            </div>
+
+                            <Dialog
+                                open={isCreateDialogOpen}
+                                onOpenChange={setIsCreateDialogOpen}
                             >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create Campaign
-                            </Button>
-                        </DialogTrigger>
-
-                        <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                                <DialogTitle>
-                                    {editingCampaign
-                                        ? "Edit Campaign"
-                                        : "Create New Campaign"}
-                                </DialogTitle>
-                            </DialogHeader>
-
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <Label htmlFor="title">
-                                        Campaign Title
-                                    </Label>
-                                    <Input
-                                        id="title"
-                                        value={formData.title}
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                title: e.target.value,
-                                            }))
-                                        }
-                                        placeholder="Enter campaign title"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="description">
-                                        Description
-                                    </Label>
-                                    <Textarea
-                                        id="description"
-                                        value={formData.description}
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                description: e.target.value,
-                                            }))
-                                        }
-                                        placeholder="Describe the campaign purpose and goals"
-                                        rows={4}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="goalAmount">
-                                            Goal Amount ($)
-                                        </Label>
-                                        <Input
-                                            id="goalAmount"
-                                            type="number"
-                                            min="1"
-                                            value={
-                                                formData.goalAmountCents / 100
-                                            }
-                                            onChange={(e) =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    goalAmountCents:
-                                                        parseFloat(
-                                                            e.target.value
-                                                        ) * 100 || 0,
-                                                }))
-                                            }
-                                            placeholder="5000"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="endDate">
-                                            End Date (Optional)
-                                        </Label>
-                                        <Input
-                                            id="endDate"
-                                            type="date"
-                                            value={formData.endDate}
-                                            onChange={(e) =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    endDate: e.target.value,
-                                                }))
-                                            }
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="coverImage">
-                                        Cover Image URL (Optional)
-                                    </Label>
-                                    <Input
-                                        id="coverImage"
-                                        value={formData.coverImage}
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                coverImage: e.target.value,
-                                            }))
-                                        }
-                                        placeholder="https://example.com/image.jpg"
-                                    />
-                                </div>
-
-                                <div className="flex justify-end gap-3 pt-4">
+                                <DialogTrigger>
                                     <Button
-                                        type="button"
-                                        variant="outline"
                                         onClick={() => {
-                                            setIsCreateDialogOpen(false);
                                             setEditingCampaign(null);
                                             resetForm();
                                         }}
                                     >
-                                        Cancel
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Create Campaign
                                     </Button>
-                                    <Button type="submit">
-                                        {editingCampaign
-                                            ? "Update Campaign"
-                                            : "Create Campaign"}
-                                    </Button>
-                                </div>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </div>
+                                </DialogTrigger>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center">
-                                <DollarSign className="h-8 w-8 text-green-600" />
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">
-                                        Total Raised
-                                    </p>
-                                    <p className="text-2xl font-bold">
-                                        {formatCurrency(totalRaised)}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle>
+                                            {editingCampaign
+                                                ? "Edit Campaign"
+                                                : "Create New Campaign"}
+                                        </DialogTitle>
+                                    </DialogHeader>
 
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center">
-                                <TrendingUp className="h-8 w-8 text-blue-600" />
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">
-                                        Total Campaigns
-                                    </p>
-                                    <p className="text-2xl font-bold">
-                                        {totalCampaigns}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    <form
+                                        onSubmit={handleSubmit}
+                                        className="space-y-4"
+                                    >
+                                        <div>
+                                            <Label htmlFor="title">
+                                                Campaign Title
+                                            </Label>
+                                            <Input
+                                                id="title"
+                                                value={formData.title}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        title: e.target.value,
+                                                    }))
+                                                }
+                                                placeholder="Enter campaign title"
+                                                required
+                                            />
+                                        </div>
 
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="flex items-center">
-                                <Users className="h-8 w-8 text-purple-600" />
-                                <div className="ml-4">
-                                    <p className="text-sm font-medium text-gray-600">
-                                        Active Campaigns
-                                    </p>
-                                    <p className="text-2xl font-bold">
-                                        {activeCampaigns}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                                        <div>
+                                            <Label htmlFor="description">
+                                                Description
+                                            </Label>
+                                            <Textarea
+                                                id="description"
+                                                value={formData.description}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        description:
+                                                            e.target.value,
+                                                    }))
+                                                }
+                                                placeholder="Describe the campaign purpose and goals"
+                                                rows={4}
+                                                required
+                                            />
+                                        </div>
 
-                {/* Campaigns Table */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>All Campaigns</CardTitle>
-                    </CardHeader>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Label htmlFor="goalAmount">
+                                                    Goal Amount ($)
+                                                </Label>
+                                                <Input
+                                                    id="goalAmount"
+                                                    type="number"
+                                                    min="1"
+                                                    value={
+                                                        formData.goalAmountCents /
+                                                        100
+                                                    }
+                                                    onChange={(e) =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            goalAmountCents:
+                                                                parseFloat(
+                                                                    e.target
+                                                                        .value
+                                                                ) * 100 || 0,
+                                                        }))
+                                                    }
+                                                    placeholder="5000"
+                                                    required
+                                                />
+                                            </div>
 
-                    <CardContent>
-                        {loading ? (
-                            <div className="space-y-4">
-                                {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="animate-pulse">
-                                        <div className="h-16 bg-gray-200 rounded-lg"></div>
+                                            <div>
+                                                <Label htmlFor="endDate">
+                                                    End Date (Optional)
+                                                </Label>
+                                                <Input
+                                                    id="endDate"
+                                                    type="date"
+                                                    value={formData.endDate}
+                                                    onChange={(e) =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            endDate:
+                                                                e.target.value,
+                                                        }))
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <Label htmlFor="coverImage">
+                                                Cover Image URL (Optional)
+                                            </Label>
+                                            <Input
+                                                id="coverImage"
+                                                value={formData.coverImage}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        coverImage:
+                                                            e.target.value,
+                                                    }))
+                                                }
+                                                placeholder="https://example.com/image.jpg"
+                                            />
+                                        </div>
+
+                                        <div className="flex justify-end gap-3 pt-4">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    setIsCreateDialogOpen(
+                                                        false
+                                                    );
+                                                    setEditingCampaign(null);
+                                                    resetForm();
+                                                }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button type="submit">
+                                                {editingCampaign
+                                                    ? "Update Campaign"
+                                                    : "Create Campaign"}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+
+                        {/* Stats Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center">
+                                        <DollarSign className="h-8 w-8 text-green-600" />
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">
+                                                Total Raised
+                                            </p>
+                                            <p className="text-2xl font-bold">
+                                                {formatCurrency(totalRaised)}
+                                            </p>
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        ) : campaigns.length === 0 ? (
-                            <div className="text-center py-12">
-                                <TrendingUp className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                                <h3 className="text-xl font-medium mb-2">
-                                    No campaigns yet
-                                </h3>
-                                <p className="text-gray-600 mb-6">
-                                    Create your first fundraising campaign to
-                                    get started.
-                                </p>
-                            </div>
-                        ) : (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Title</TableHead>
-                                        <TableHead>Goal</TableHead>
-                                        <TableHead>Raised</TableHead>
-                                        <TableHead>Progress</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>End Date</TableHead>
-                                        <TableHead>Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
+                                </CardContent>
+                            </Card>
 
-                                <TableBody>
-                                    {campaigns.map((campaign) => {
-                                        const progress =
-                                            campaign.goalAmountCents > 0
-                                                ? Math.min(
-                                                      (campaign.currentAmountCents /
-                                                          campaign.goalAmountCents) *
-                                                          100,
-                                                      100
-                                                  )
-                                                : 0;
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center">
+                                        <TrendingUp className="h-8 w-8 text-blue-600" />
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">
+                                                Total Campaigns
+                                            </p>
+                                            <p className="text-2xl font-bold">
+                                                {totalCampaigns}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
 
-                                        return (
-                                            <TableRow key={campaign.id}>
-                                                <TableCell className="font-medium">
-                                                    {campaign.title}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatCurrency(
-                                                        campaign.goalAmountCents
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {formatCurrency(
-                                                        campaign.currentAmountCents
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-20 bg-gray-200 rounded-full h-2">
-                                                            <div
-                                                                className="bg-blue-600 h-2 rounded-full"
-                                                                style={{
-                                                                    width: `${progress}%`,
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <span className="text-sm">
-                                                            {progress.toFixed(
-                                                                1
-                                                            )}
-                                                            %
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        variant={
-                                                            campaign.isActive
-                                                                ? "default"
-                                                                : "secondary"
-                                                        }
-                                                    >
-                                                        {campaign.isActive
-                                                            ? "Active"
-                                                            : "Ended"}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {campaign.endDate
-                                                        ? new Date(
-                                                              campaign.endDate
-                                                          ).toLocaleDateString()
-                                                        : "No end date"}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                handleEdit(
-                                                                    campaign
-                                                                )
-                                                            }
-                                                        >
-                                                            <Edit className="h-3 w-3" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    campaign.id
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-3 w-3" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
+                            <Card>
+                                <CardContent className="p-6">
+                                    <div className="flex items-center">
+                                        <Users className="h-8 w-8 text-purple-600" />
+                                        <div className="ml-4">
+                                            <p className="text-sm font-medium text-gray-600">
+                                                Active Campaigns
+                                            </p>
+                                            <p className="text-2xl font-bold">
+                                                {activeCampaigns}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Campaigns Table */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>All Campaigns</CardTitle>
+                            </CardHeader>
+
+                            <CardContent>
+                                {loading ? (
+                                    <div className="space-y-4">
+                                        {[...Array(5)].map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className="animate-pulse"
+                                            >
+                                                <div className="h-16 bg-gray-200 rounded-lg"></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : campaigns.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <TrendingUp className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                                        <h3 className="text-xl font-medium mb-2">
+                                            No campaigns yet
+                                        </h3>
+                                        <p className="text-gray-600 mb-6">
+                                            Create your first fundraising
+                                            campaign to get started.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Title</TableHead>
+                                                <TableHead>Goal</TableHead>
+                                                <TableHead>Raised</TableHead>
+                                                <TableHead>Progress</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>End Date</TableHead>
+                                                <TableHead>Actions</TableHead>
                                             </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        )}
-                    </CardContent>
-                </Card>
+                                        </TableHeader>
+
+                                        <TableBody>
+                                            {campaigns.map((campaign) => {
+                                                const progress =
+                                                    campaign.goalAmountCents > 0
+                                                        ? Math.min(
+                                                              (campaign.currentAmountCents /
+                                                                  campaign.goalAmountCents) *
+                                                                  100,
+                                                              100
+                                                          )
+                                                        : 0;
+
+                                                return (
+                                                    <TableRow key={campaign.id}>
+                                                        <TableCell className="font-medium">
+                                                            {campaign.title}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {formatCurrency(
+                                                                campaign.goalAmountCents
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {formatCurrency(
+                                                                campaign.currentAmountCents
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-20 bg-gray-200 rounded-full h-2">
+                                                                    <div
+                                                                        className="bg-blue-600 h-2 rounded-full"
+                                                                        style={{
+                                                                            width: `${progress}%`,
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-sm">
+                                                                    {progress.toFixed(
+                                                                        1
+                                                                    )}
+                                                                    %
+                                                                </span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant={
+                                                                    campaign.isActive
+                                                                        ? "default"
+                                                                        : "secondary"
+                                                                }
+                                                            >
+                                                                {campaign.isActive
+                                                                    ? "Active"
+                                                                    : "Ended"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {campaign.endDate
+                                                                ? new Date(
+                                                                      campaign.endDate
+                                                                  ).toLocaleDateString()
+                                                                : "No end date"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex gap-2">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        handleEdit(
+                                                                            campaign
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Edit className="h-3 w-3" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            campaign.id
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );

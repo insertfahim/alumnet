@@ -5,11 +5,20 @@ import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { CampaignProgressCard } from "@/components/donations/FundraisingProgressBar";
 import { DonationForm } from "@/components/donations/DonationForm";
+import CampaignProposalForm from "@/components/donations/CampaignProposalForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, TrendingUp, Calendar, Filter } from "lucide-react";
+import {
+    Heart,
+    Users,
+    TrendingUp,
+    Calendar,
+    Filter,
+    Plus,
+    Settings,
+} from "lucide-react";
 import { FundraisingCampaign } from "@/types";
 
 interface CampaignWithStats extends FundraisingCampaign {
@@ -28,12 +37,19 @@ export default function DonationsPage() {
 
     useEffect(() => {
         fetchCampaigns();
-    }, [filter]);
+    }, [filter, user]);
 
     const fetchCampaigns = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/campaigns?status=${filter}`);
+            const token = localStorage.getItem("token");
+            const response = await fetch(`/api/campaigns?status=${filter}`, {
+                headers: token
+                    ? {
+                          Authorization: `Bearer ${token}`,
+                      }
+                    : {},
+            });
             if (response.ok) {
                 const data = await response.json();
                 setCampaigns(data.campaigns);
@@ -217,17 +233,45 @@ export default function DonationsPage() {
                             </CardContent>
                         </Card>
 
-                        {user?.role === "ADMIN" && (
+                        {user && (
                             <Card className="mt-6">
                                 <CardHeader>
-                                    <CardTitle>Admin Actions</CardTitle>
+                                    <CardTitle>
+                                        {user.role === "ADMIN"
+                                            ? "Admin Actions"
+                                            : "Get Involved"}
+                                    </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <Button asChild className="w-full">
-                                        <Link href="/admin/donations">
-                                            Manage Campaigns
-                                        </Link>
-                                    </Button>
+                                <CardContent className="space-y-3">
+                                    {user.role === "ADMIN" ? (
+                                        <Button className="w-full">
+                                            <Link
+                                                href="/admin/donations"
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Settings className="h-4 w-4" />
+                                                Manage Campaigns
+                                            </Link>
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <CampaignProposalForm
+                                                onSuccess={fetchCampaigns}
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                className="w-full"
+                                            >
+                                                <Link
+                                                    href="/dashboard/donations"
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <Heart className="h-4 w-4" />
+                                                    My Proposals
+                                                </Link>
+                                            </Button>
+                                        </>
+                                    )}
                                 </CardContent>
                             </Card>
                         )}

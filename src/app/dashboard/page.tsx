@@ -12,9 +12,6 @@ import {
     MessageCircle,
     TrendingUp,
     Award,
-    Bell,
-    Settings,
-    Edit,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
@@ -164,24 +161,6 @@ export default function Dashboard() {
                         <p className="text-gray-600 mt-1">
                             Here's what's happening in your alumni network
                         </p>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <Link
-                            href="/profile"
-                            className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-                        >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Profile
-                        </Link>
-                        <button className="p-2 text-gray-400 hover:text-gray-600">
-                            <Bell className="w-5 h-5" />
-                        </button>
-                        <Link
-                            href="/profile"
-                            className="p-2 text-gray-400 hover:text-gray-600"
-                        >
-                            <Settings className="w-5 h-5" />
-                        </Link>
                     </div>
                 </div>
             </div>

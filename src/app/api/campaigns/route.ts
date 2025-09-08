@@ -10,22 +10,73 @@ const createCampaignSchema = z.object({
     currency: z.string().default("USD"),
     endDate: z.string().optional(),
     coverImage: z.string().optional(),
+    isDraft: z.boolean().default(false),
 });
 
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
-        const status = searchParams.get("status") || "active";
+        const status = searchParams.get("status") || "approved";
+        const userOwned = searchParams.get("userOwned") === "true";
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "10");
         const skip = (page - 1) * limit;
 
-        const where =
-            status === "active"
-                ? { isActive: true }
-                : status === "ended"
-                ? { isActive: false, endDate: { lte: new Date() } }
-                : {};
+        // Check if user is admin
+        const authHeader = request.headers.get("authorization");
+        let isAdmin = false;
+        let userId = null;
+        if (authHeader?.startsWith("Bearer ")) {
+            const token = authHeader.substring(7);
+            const decoded = verifyToken(token);
+            if (decoded) {
+                const user = await prisma.user.findUnique({
+                    where: { id: decoded.userId },
+                });
+                isAdmin = user?.role === "ADMIN";
+                userId = user?.id;
+            }
+        }
+
+        let where: any = {};
+
+        if (userOwned && userId) {
+            // User requesting their own campaigns
+            where = { organizerId: userId };
+            if (status !== "all") {
+                where.status = status.toUpperCase();
+            }
+        } else if (isAdmin) {
+            // Admin can see all campaigns based on status
+            if (status === "all") {
+                where = {};
+            } else if (status === "pending") {
+                where = { status: "PENDING" };
+            } else if (status === "approved") {
+                where = { status: "APPROVED" };
+            } else if (status === "rejected") {
+                where = { status: "REJECTED" };
+            } else if (status === "draft") {
+                where = { status: "DRAFT" };
+            } else if (status === "active") {
+                where = { status: "APPROVED", isActive: true };
+            } else if (status === "ended") {
+                where = {
+                    status: "APPROVED",
+                    isActive: false,
+                    endDate: { lte: new Date() },
+                };
+            }
+        } else {
+            // Non-admin users only see approved campaigns
+            where = { status: "APPROVED" };
+            if (status === "active") {
+                where.isActive = true;
+            } else if (status === "ended") {
+                where.isActive = false;
+                where.endDate = { lte: new Date() };
+            }
+        }
 
         const [campaigns, total] = await Promise.all([
             prisma.fundraisingCampaign.findMany({
@@ -139,11 +190,26 @@ export async function POST(request: NextRequest) {
             ? new Date(validatedData.endDate)
             : null;
 
+        // Determine campaign status based on user role and draft flag
+        let campaignStatus: "DRAFT" | "PENDING" | "APPROVED" = "PENDING";
+        if (validatedData.isDraft) {
+            campaignStatus = "DRAFT";
+        } else if (user.role === "ADMIN") {
+            campaignStatus = "APPROVED"; // Admins can directly approve
+        }
+
         const campaign = await prisma.fundraisingCampaign.create({
             data: {
-                ...validatedData,
+                title: validatedData.title,
+                description: validatedData.description,
+                goalAmountCents: validatedData.goalAmountCents,
+                currency: validatedData.currency,
                 endDate,
+                coverImage: validatedData.coverImage,
                 organizerId: user.id,
+                status: campaignStatus,
+                approvedBy: user.role === "ADMIN" ? user.id : undefined,
+                approvedAt: user.role === "ADMIN" ? new Date() : undefined,
             },
             include: {
                 organizer: {

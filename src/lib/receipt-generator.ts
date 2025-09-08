@@ -204,7 +204,7 @@ export async function generateAndSaveReceipt(
 
         // TODO: Upload PDF to S3/Cloud storage and get URL
         // For now, we'll store the receipt record with a placeholder
-        let receipt = await prisma.receipt.findUnique({
+        let receipt = await prisma.receipt.findFirst({
             where: { donationId },
         });
 

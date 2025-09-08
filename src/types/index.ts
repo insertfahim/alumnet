@@ -220,6 +220,11 @@ export interface FundraisingCampaign {
     coverImage?: string;
     organizerId: string;
     organizer: User;
+    status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+    rejectionReason?: string;
+    approvedAt?: Date;
+    approvedBy?: string;
+    approver?: User;
     donations: Donation[];
     createdAt: Date;
     updatedAt: Date;

@@ -11,6 +11,8 @@ const updateCampaignSchema = z.object({
     endDate: z.string().optional(),
     coverImage: z.string().optional(),
     isActive: z.boolean().optional(),
+    status: z.enum(["DRAFT", "PENDING", "APPROVED", "REJECTED"]).optional(),
+    rejectionReason: z.string().optional(),
 });
 
 export async function GET(
@@ -160,12 +162,34 @@ export async function PUT(
             ? new Date(validatedData.endDate)
             : undefined;
 
+        // Prepare update data
+        const updateData: any = {
+            ...validatedData,
+            endDate,
+        };
+
+        // Handle status-specific logic
+        if (validatedData.status) {
+            updateData.status = validatedData.status;
+
+            // If admin is approving, set approval data
+            if (validatedData.status === "APPROVED" && user.role === "ADMIN") {
+                updateData.approvedAt = new Date();
+                updateData.approvedBy = decoded.userId;
+            }
+
+            // If rejecting, ensure rejection reason is provided
+            if (
+                validatedData.status === "REJECTED" &&
+                validatedData.rejectionReason
+            ) {
+                updateData.rejectionReason = validatedData.rejectionReason;
+            }
+        }
+
         const updatedCampaign = await prisma.fundraisingCampaign.update({
             where: { id: params.id },
-            data: {
-                ...validatedData,
-                endDate,
-            },
+            data: updateData,
             include: {
                 organizer: {
                     select: {
