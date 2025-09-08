@@ -116,6 +116,7 @@ export interface Event {
     description: string;
     location: string;
     virtual: boolean;
+    type?: string;
     startDate: Date;
     endDate: Date;
     maxAttendees?: number;

@@ -189,6 +189,7 @@ model Event {
   description  String
   location     String
   virtual      Boolean  @default(false)
+  type         String?
   startDate    DateTime
   endDate      DateTime
   maxAttendees Int?
