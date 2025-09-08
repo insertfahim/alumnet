@@ -1,13 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { User, Menu, X, LogOut, Settings, Users, Shield } from "lucide-react";
+import {
+    User,
+    Menu,
+    X,
+    LogOut,
+    Settings,
+    Users,
+    Shield,
+    MessageCircle,
+} from "lucide-react";
 
 export function Navigation() {
     const [isOpen, setIsOpen] = useState(false);
-    const { user, loading, logout } = useAuth();
+    const { user, loading, logout, token } = useAuth();
+    const [unreadMessages, setUnreadMessages] = useState(0);
+
+    useEffect(() => {
+        if (user && token) {
+            fetchUnreadCount();
+        }
+    }, [user, token]);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const response = await fetch("/api/messages", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const totalUnread = data.threads.reduce(
+                    (total: number, thread: any) => total + thread.unreadCount,
+                    0
+                );
+                setUnreadMessages(totalUnread);
+            }
+        } catch (error) {
+            console.error("Error fetching unread count:", error);
+        }
+    };
 
     return (
         <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -82,9 +119,22 @@ export function Navigation() {
                                     </Link>
                                     <Link
                                         href="/messages"
-                                        className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
+                                        className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium relative"
                                     >
                                         Messages
+                                        {unreadMessages > 0 && (
+                                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                                {unreadMessages > 99
+                                                    ? "99+"
+                                                    : unreadMessages}
+                                            </span>
+                                        )}
+                                    </Link>
+                                    <Link
+                                        href="/connections"
+                                        className="text-gray-500 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300 text-sm font-medium"
+                                    >
+                                        Connections
                                     </Link>
                                 </>
                             )}
@@ -203,9 +253,22 @@ export function Navigation() {
                                 </Link>
                                 <Link
                                     href="/messages"
-                                    className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                    className="flex items-center px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 relative"
                                 >
                                     Messages
+                                    {unreadMessages > 0 && (
+                                        <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                            {unreadMessages > 99
+                                                ? "99+"
+                                                : unreadMessages}
+                                        </span>
+                                    )}
+                                </Link>
+                                <Link
+                                    href="/connections"
+                                    className="block px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                                >
+                                    Connections
                                 </Link>
                                 <button
                                     onClick={logout}

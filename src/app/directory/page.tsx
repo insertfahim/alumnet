@@ -11,6 +11,8 @@ import {
     UserPlus,
     MessageCircle,
     Loader2,
+    UserCheck,
+    Clock,
 } from "lucide-react";
 import { User } from "@/types";
 
@@ -140,14 +142,117 @@ export default function DirectoryPage() {
         setFilteredAlumni(filtered);
     };
 
-    const handleConnect = (userId: string) => {
-        // TODO: Implement connection request
-        console.log("Connect with user:", userId);
+    const [connections, setConnections] = useState<{ [key: string]: string }>(
+        {}
+    );
+    const [connectionLoading, setConnectionLoading] = useState<{
+        [key: string]: boolean;
+    }>({});
+
+    // Fetch user's connections on mount
+    useEffect(() => {
+        fetchUserConnections();
+    }, []);
+
+    const fetchUserConnections = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const response = await fetch("/api/connections?status=all", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const connectionMap: { [key: string]: string } = {};
+                data.connections.forEach((conn: any) => {
+                    const userId = conn.isOutgoing
+                        ? conn.user.id
+                        : conn.user.id;
+                    connectionMap[userId] = conn.status;
+                });
+                setConnections(connectionMap);
+            }
+        } catch (error) {
+            console.error("Error fetching connections:", error);
+        }
     };
 
-    const handleMessage = (userId: string) => {
-        // TODO: Implement messaging
-        console.log("Message user:", userId);
+    const handleConnect = async (userId: string) => {
+        if (connections[userId]) return; // Already connected or pending
+
+        setConnectionLoading((prev) => ({ ...prev, [userId]: true }));
+
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Please log in to connect with alumni");
+                return;
+            }
+
+            const response = await fetch("/api/connections", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    toUserId: userId,
+                    message:
+                        "I'd like to connect with you on the BRACU Alumni Network!",
+                }),
+            });
+
+            if (response.ok) {
+                setConnections((prev) => ({ ...prev, [userId]: "PENDING" }));
+                alert("Connection request sent successfully!");
+            } else {
+                const error = await response.json();
+                alert(error.error || "Failed to send connection request");
+            }
+        } catch (error) {
+            console.error("Error sending connection request:", error);
+            alert("Failed to send connection request");
+        } finally {
+            setConnectionLoading((prev) => ({ ...prev, [userId]: false }));
+        }
+    };
+
+    const handleMessage = async (userId: string) => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Please log in to message alumni");
+                return;
+            }
+
+            // First, try to create or get existing thread
+            const response = await fetch("/api/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    participantId: userId,
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const threadId = data.thread?.id || data.id;
+                // Navigate to the message thread
+                window.location.href = `/messages/${threadId}`;
+            } else {
+                alert("Failed to start conversation");
+            }
+        } catch (error) {
+            console.error("Error starting conversation:", error);
+            alert("Failed to start conversation");
+        }
     };
 
     const clearFilters = () => {
@@ -439,10 +544,41 @@ export default function DirectoryPage() {
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => handleConnect(person.id)}
-                                    className="flex-1 flex items-center justify-center px-3 py-2 border border-primary-600 text-primary-600 rounded-md text-sm font-medium hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                                    disabled={
+                                        connectionLoading[person.id] ||
+                                        connections[person.id] === "PENDING" ||
+                                        connections[person.id] === "ACCEPTED"
+                                    }
+                                    className={`flex-1 flex items-center justify-center px-3 py-2 border rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
+                                        connections[person.id] === "ACCEPTED"
+                                            ? "border-green-600 text-green-600 bg-green-50 cursor-not-allowed"
+                                            : connections[person.id] ===
+                                              "PENDING"
+                                            ? "border-yellow-600 text-yellow-600 bg-yellow-50 cursor-not-allowed"
+                                            : connectionLoading[person.id]
+                                            ? "border-gray-300 text-gray-400 bg-gray-50 cursor-not-allowed"
+                                            : "border-primary-600 text-primary-600 hover:bg-primary-50"
+                                    }`}
                                 >
-                                    <UserPlus className="w-4 h-4 mr-1" />
-                                    Connect
+                                    {connectionLoading[person.id] ? (
+                                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    ) : connections[person.id] ===
+                                      "ACCEPTED" ? (
+                                        <>
+                                            <UserCheck className="w-4 h-4 mr-1" />
+                                            Connected
+                                        </>
+                                    ) : connections[person.id] === "PENDING" ? (
+                                        <>
+                                            <Clock className="w-4 h-4 mr-1" />
+                                            Pending
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserPlus className="w-4 h-4 mr-1" />
+                                            Connect
+                                        </>
+                                    )}
                                 </button>
                                 <button
                                     onClick={() => handleMessage(person.id)}
