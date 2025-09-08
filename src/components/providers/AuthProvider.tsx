@@ -47,6 +47,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             setToken(storedToken);
+
+            // Check if we have cached user data first
+            const cachedUser = localStorage.getItem("user");
+            if (cachedUser) {
+                try {
+                    const userData = JSON.parse(cachedUser);
+                    setUser(userData);
+                    setLoading(false);
+
+                    // Verify in background without blocking UI
+                    verifyTokenInBackground(storedToken);
+                    return;
+                } catch (e) {
+                    // Invalid cached data, continue with normal flow
+                    localStorage.removeItem("user");
+                }
+            }
+
             const response = await fetch("/api/auth/me", {
                 headers: {
                     Authorization: `Bearer ${storedToken}`,
@@ -56,16 +74,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (response.ok) {
                 const userData = await response.json();
                 setUser(userData);
+                // Cache user data for faster future loads
+                localStorage.setItem("user", JSON.stringify(userData));
             } else {
                 localStorage.removeItem("token");
+                localStorage.removeItem("user");
                 setToken(null);
             }
         } catch (error) {
             console.error("Auth check failed:", error);
             localStorage.removeItem("token");
+            localStorage.removeItem("user");
             setToken(null);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const verifyTokenInBackground = async (token: string) => {
+        try {
+            const response = await fetch("/api/auth/me", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                // Token is invalid, force logout
+                logout();
+            }
+        } catch (error) {
+            console.error("Background token verification failed:", error);
         }
     };
 
@@ -82,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (response.ok) {
                 const { user, token } = await response.json();
                 localStorage.setItem("token", token);
+                localStorage.setItem("user", JSON.stringify(user));
                 setToken(token);
                 setUser(user);
                 return true;
@@ -95,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         setToken(null);
         setUser(null);
     };

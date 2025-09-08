@@ -21,12 +21,29 @@ export function Navigation() {
 
     useEffect(() => {
         if (user && token) {
-            fetchUnreadCount();
+            // Debounce unread count fetching
+            const timer = setTimeout(() => {
+                fetchUnreadCount();
+            }, 1000);
+            return () => clearTimeout(timer);
         }
     }, [user, token]);
 
     const fetchUnreadCount = async () => {
         try {
+            // Check cache first
+            const cached = sessionStorage.getItem("unread_count");
+            const cachedTime = sessionStorage.getItem("unread_count_time");
+
+            if (cached && cachedTime) {
+                const age = Date.now() - parseInt(cachedTime);
+                if (age < 60000) {
+                    // 1 minute cache
+                    setUnreadMessages(parseInt(cached));
+                    return;
+                }
+            }
+
             const response = await fetch("/api/messages", {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -40,6 +57,13 @@ export function Navigation() {
                     0
                 );
                 setUnreadMessages(totalUnread);
+
+                // Cache the result
+                sessionStorage.setItem("unread_count", totalUnread.toString());
+                sessionStorage.setItem(
+                    "unread_count_time",
+                    Date.now().toString()
+                );
             }
         } catch (error) {
             console.error("Error fetching unread count:", error);

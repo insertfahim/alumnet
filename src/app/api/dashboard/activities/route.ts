@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, AuthenticatedRequest } from "@/lib/middleware/auth";
 import { prisma } from "@/lib/prisma";
 
+// Enable caching for this route
+export const revalidate = 30; // Cache for 30 seconds
+
 interface Activity {
     id: string;
     type: "connection" | "event" | "job" | "message";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -19,23 +19,77 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 
-// Lazy load the NewsletterSection component
+// Lazy load components for better performance
 const NewsletterSection = dynamic(
     () => import("@/components/dashboard/NewsletterSection"),
     {
-        loading: () => (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-                    <div className="space-y-3">
-                        <div className="h-3 bg-gray-200 rounded"></div>
-                        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                    </div>
-                </div>
-            </div>
-        ),
+        loading: () => <NewsletterSkeleton />,
+        ssr: false, // Disable SSR for this component
     }
 );
+
+// Loading skeleton components
+function DashboardSkeleton() {
+    return (
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-1/3 mb-8"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="bg-white rounded-lg shadow p-6">
+                            <div className="h-16 bg-gray-200 rounded"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function NewsletterSkeleton() {
+    return (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                <div className="space-y-3">
+                    <div className="h-3 bg-gray-200 rounded"></div>
+                    <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Optimized StatCard component with individual loading state
+function StatCard({
+    icon,
+    title,
+    value,
+    loading,
+}: {
+    icon: React.ReactNode;
+    title: string;
+    value: number;
+    loading: boolean;
+}) {
+    return (
+        <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+                {icon}
+                <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">{title}</p>
+                    {loading ? (
+                        <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="text-2xl font-semibold text-gray-900">
+                            {value}
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 interface DashboardStats {
     totalConnections: number;
@@ -56,58 +110,46 @@ export default function Dashboard() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 
-    // Fetch dashboard stats
-    const { data: stats, isLoading: statsLoading } = useQuery({
-        queryKey: ["dashboard-stats"],
+    // Fetch combined dashboard data with optimized caching
+    const {
+        data: dashboardData,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ["dashboard-combined", user?.id],
         queryFn: async () => {
-            const response = await fetch("/api/dashboard/stats", {
+            const response = await fetch("/api/dashboard/combined", {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
             });
-            if (!response.ok) throw new Error("Failed to fetch stats");
+            if (!response.ok) throw new Error("Failed to fetch dashboard data");
             return response.json();
         },
         enabled: !!user && !authLoading,
-        staleTime: 1000 * 60 * 2, // 2 minutes
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 10, // Keep in cache for 10 minutes
+        retry: 2,
+        refetchOnWindowFocus: false,
     });
 
-    // Fetch recent activities
-    const { data: activitiesData, isLoading: activitiesLoading } = useQuery({
-        queryKey: ["dashboard-activities"],
-        queryFn: async () => {
-            const response = await fetch("/api/dashboard/activities", {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-            });
-            if (!response.ok) throw new Error("Failed to fetch activities");
-            return response.json();
-        },
-        enabled: !!user && !authLoading,
-        staleTime: 1000 * 60 * 2, // 2 minutes
-    });
-
-    const dashboardStats: DashboardStats = stats || {
+    const dashboardStats: DashboardStats = dashboardData?.stats || {
         totalConnections: 0,
         upcomingEvents: 0,
         jobApplications: 0,
         unreadMessages: 0,
     };
-    const recentActivities: RecentActivity[] = activitiesData?.activities || [];
-    const loading = authLoading || statsLoading || activitiesLoading;
+    const recentActivities: RecentActivity[] = dashboardData?.activities || [];
 
-    if (authLoading || statsLoading || activitiesLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">
-                        Loading your dashboard...
-                    </p>
-                </div>
-            </div>
-        );
+    // Show loading skeleton only for initial auth loading
+    if (authLoading) {
+        return <DashboardSkeleton />;
+    }
+
+    // Redirect if not authenticated
+    if (!user) {
+        router.push("/login");
+        return null;
     }
 
     return (
@@ -146,61 +188,30 @@ export default function Dashboard() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
-                        <Users className="h-8 w-8 text-blue-500" />
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">
-                                Connections
-                            </p>
-                            <p className="text-2xl font-semibold text-gray-900">
-                                {dashboardStats.totalConnections}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
-                        <Calendar className="h-8 w-8 text-green-500" />
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">
-                                Upcoming Events
-                            </p>
-                            <p className="text-2xl font-semibold text-gray-900">
-                                {dashboardStats.upcomingEvents}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
-                        <Briefcase className="h-8 w-8 text-purple-500" />
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">
-                                Job Applications
-                            </p>
-                            <p className="text-2xl font-semibold text-gray-900">
-                                {dashboardStats.jobApplications}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="flex items-center">
-                        <MessageCircle className="h-8 w-8 text-orange-500" />
-                        <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600">
-                                Unread Messages
-                            </p>
-                            <p className="text-2xl font-semibold text-gray-900">
-                                {dashboardStats.unreadMessages}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <StatCard
+                    icon={<Users className="h-8 w-8 text-blue-500" />}
+                    title="Connections"
+                    value={dashboardStats.totalConnections}
+                    loading={isLoading}
+                />
+                <StatCard
+                    icon={<Calendar className="h-8 w-8 text-green-500" />}
+                    title="Upcoming Events"
+                    value={dashboardStats.upcomingEvents}
+                    loading={isLoading}
+                />
+                <StatCard
+                    icon={<Briefcase className="h-8 w-8 text-purple-500" />}
+                    title="Job Applications"
+                    value={dashboardStats.jobApplications}
+                    loading={isLoading}
+                />
+                <StatCard
+                    icon={<MessageCircle className="h-8 w-8 text-orange-500" />}
+                    title="Unread Messages"
+                    value={dashboardStats.unreadMessages}
+                    loading={isLoading}
+                />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
