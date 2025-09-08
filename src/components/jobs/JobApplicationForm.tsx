@@ -56,7 +56,9 @@ export function JobApplicationForm({
                 onClose();
                 alert("Application submitted successfully!");
             } else if (response.status === 401) {
-                alert("Your session has expired. Please log in again to continue.");
+                alert(
+                    "Your session has expired. Please log in again to continue."
+                );
                 window.location.href = "/login";
             } else {
                 const data = await response.json();
@@ -107,19 +109,23 @@ export function JobApplicationForm({
                             <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                     {
-                                        "full-time":
+                                        FULL_TIME:
                                             "bg-green-100 text-green-800",
-                                        "part-time":
-                                            "bg-blue-100 text-blue-800",
-                                        contract:
+                                        PART_TIME: "bg-blue-100 text-blue-800",
+                                        CONTRACT:
                                             "bg-purple-100 text-purple-800",
-                                        internship:
+                                        INTERNSHIP:
                                             "bg-orange-100 text-orange-800",
                                     }[job.type] || "bg-gray-100 text-gray-800"
                                 }`}
                             >
-                                {job.type.charAt(0).toUpperCase() +
-                                    job.type.slice(1).replace("-", " ")}
+                                {job.type === "FULL_TIME"
+                                    ? "Full Time"
+                                    : job.type === "PART_TIME"
+                                    ? "Part Time"
+                                    : job.type === "CONTRACT"
+                                    ? "Contract"
+                                    : "Internship"}
                             </span>
                             {job.salary && (
                                 <span className="text-sm font-medium text-gray-900">

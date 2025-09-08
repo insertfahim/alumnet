@@ -44,10 +44,11 @@ export default function JobsPage() {
         try {
             setLoading(true);
             const queryParams = new URLSearchParams();
-            
+
             if (searchTerm) queryParams.append("search", searchTerm);
             if (filters.type) queryParams.append("type", filters.type);
-            if (filters.location) queryParams.append("location", filters.location);
+            if (filters.location)
+                queryParams.append("location", filters.location);
             if (filters.remote) queryParams.append("remote", filters.remote);
             if (filters.company) queryParams.append("company", filters.company);
 
@@ -127,34 +128,9 @@ export default function JobsPage() {
         setFilteredJobs(filtered);
     };
 
-    const handleApply = (job: Job) => {
-        setSelectedJobForApplication(job);
-        setShowApplicationForm(true);
-    };
-
-    const handleApplicationSuccess = () => {
-        // Refresh the jobs list to update application counts
-        fetchJobs();
-    };
-
     const handlePostJobSuccess = () => {
         // Refresh the jobs list to show the new job
         fetchJobs();
-    };
-
-    const formatJobType = (type: string) => {
-        switch (type) {
-            case "FULL_TIME":
-                return "Full Time";
-            case "PART_TIME":
-                return "Part Time";
-            case "CONTRACT":
-                return "Contract";
-            case "INTERNSHIP":
-                return "Internship";
-            default:
-                return type;
-        }
     };
 
     const isJobExpired = (expiresAt: Date) => {
@@ -173,36 +149,6 @@ export default function JobsPage() {
             </div>
         );
     }
-        if (filters.type) {
-            filtered = filtered.filter((job) => job.type === filters.type);
-        }
-
-        // Filter by location
-        if (filters.location) {
-            filtered = filtered.filter((job) =>
-                job.location
-                    .toLowerCase()
-                    .includes(filters.location.toLowerCase())
-            );
-        }
-
-        // Filter by remote
-        if (filters.remote) {
-            const isRemote = filters.remote === "true";
-            filtered = filtered.filter((job) => job.remote === isRemote);
-        }
-
-        // Filter by company
-        if (filters.company) {
-            filtered = filtered.filter((job) =>
-                job.company
-                    .toLowerCase()
-                    .includes(filters.company.toLowerCase())
-            );
-        }
-
-        setFilteredJobs(filtered);
-    };
 
     const clearFilters = () => {
         setFilters({
@@ -229,7 +175,9 @@ export default function JobsPage() {
     };
 
     const handleApplicationSuccess = () => {
-        // Refresh the jobs or show success message
+        // Refresh the jobs list to update application counts
+        fetchJobs();
+        // Close the application form modal
         setShowApplicationForm(false);
         setSelectedJobForApplication(null);
         // Optionally switch to applications tab to show the new application
@@ -252,10 +200,23 @@ export default function JobsPage() {
     };
 
     const formatJobType = (type: string) => {
-        return type
-            .split("-")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
+        // Handle uppercase enum values first
+        switch (type) {
+            case "FULL_TIME":
+                return "Full Time";
+            case "PART_TIME":
+                return "Part Time";
+            case "CONTRACT":
+                return "Contract";
+            case "INTERNSHIP":
+                return "Internship";
+            default:
+                // Handle hyphenated lowercase values
+                return type
+                    .split("-")
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ");
+        }
     };
 
     const getDaysAgo = (date: Date) => {
